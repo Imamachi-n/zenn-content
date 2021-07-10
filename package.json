@@ -1,0 +1,16 @@
+{
+  "name": "zenn-content",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Imamachi-n/zenn-content.git",
+  "author": "Imamachi-n <naoto.imamachi@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "art": "zenn new:article --slug",
+    "book": "zenn new:book",
+    "prv": "zenn preview"
+  },
+  "dependencies": {
+    "zenn-cli": "^0.1.91"
+  }
+}
