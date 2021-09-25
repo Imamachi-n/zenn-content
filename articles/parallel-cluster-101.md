@@ -6,6 +6,79 @@ topics: ["HPC", "ParallelCluster"]
 published: false
 ---
 
+## Parallel Cluster コトハジメ
+
+### CLI をインストールする
+
+Parallel Cluster の CLI は Python の `virtualenv` を利用しているため、用意する。
+
+```bash
+python3 -m pip install --upgrade pip
+python3 -m pip install --user --upgrade virtualenv
+python3 -m virtualenv ~/hpc-ve
+source ~/hpc-ve/bin/activate
+```
+
+先ほど作成した仮想環境に入っていることを確認する。
+
+```bash
+which python3
+# ~/hpc-ve/bin/python3
+# 抜ける場合は、`deactivate`
+```
+
+続いて、AWS CLI がインストールされていることを確認。入っていなければ、インストールしておく。
+
+```bash
+pip3 install awscli
+```
+
+さらに、AWS CDK にも依存しているため、Node.js と CDK のインストールも忘れずに。
+[nodenv](https://github.com/nodenv/nodenv#installation) などを経由してインストールしておくと、バージョン管理もできる。
+
+最後に、Parallel Cluster の CLI をインストールする。
+
+```bash
+pip3 install aws-parallelcluster
+```
+
+AWS の設定も済ませておきましょう。
+
+```bash
+aws configure
+# AWS Access Key ID [None]: YOUR_KEY
+# AWS Secret Access Key [None]: YOUR_SECRET
+# Default region name [ap-northeast-1]:
+# Default output format [JSON]:
+```
+
+### Parallel Cluster の設定ファイルを書く
+
+まず、設定ファイルを配置するディレクトリを用意する。
+
+```bash
+mkdir -p ~/.parallelcluster
+```
+
+続いて、以下の設定ファイルを作成する。
+
+```bash
+cat > ~/.parallelcluster/config << EOF
+[aws]
+aws_region_name = ap-northeast-1
+
+[cluster default]
+key_name = lab-3-your-key
+vpc_settings = public
+base_os = alinux2
+scheduler = slurm
+EOF
+```
+
+### 参考文献
+
+- [Configuration - AWS Parallel Cluster](https://docs.aws.amazon.com/parallelcluster/latest/ug/configuration.html)
+
 ## カスタムの設定をインスタンスに追加したい
 
 ### カスタム AWS ParallelCluster AMI の構築
@@ -37,6 +110,12 @@ post-install とは、インスタンスの設定が完了した後のタイミ�
 #### 対応するスクリプト
 
 `Bash` と `Python` に対応している。
+
+## その他
+
+### スケジューラーとして `SGE` と `Torque` がサポートされなくなる（2021/12/31 までサポート）
+
+[Configuring AWS ParallelCluster](https://docs.aws.amazon.com/parallelcluster/latest/ug/getting-started-configuring-parallelcluster.html)
 
 ## 参考文献
 
