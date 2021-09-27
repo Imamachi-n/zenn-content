@@ -52,6 +52,12 @@ aws configure
 # Default output format [JSON]:
 ```
 
+### 設定ファイルを自動でつくる
+
+```bash
+aws ec2 create-key-pair --key-name pcluster-key --query KeyMaterial --output text > ~/.ssh/pcluster-key
+```
+
 ### Parallel Cluster の設定ファイルを書く
 
 まず、設定ファイルを配置するディレクトリを用意する。
@@ -113,10 +119,34 @@ post-install とは、インスタンスの設定が完了した後のタイミ�
 
 ## その他
 
+### 設定ファイルは `TOML` から `YAML` 形式のファイルに移行
+
+AWS Parallel Cluster v2.x 系では、`TOML` の設定ファイルを使っていましたが、v3.x 系では `YAML` ファイルに変更されています。まだ、古い情報がネット上には残っているため、`TOML` で書かれたサンプルの設定ファイルが存在しますが、これらは v3.x 系では実行できないはずです。
+
 ### スケジューラーとして `SGE` と `Torque` がサポートされなくなる（2021/12/31 までサポート）
 
+現行の AWS Parallel Cluster v3.x 系では、`SGE` と `Torque` のサポートがなくなりました。結果として、スケジューラーとして利用できるのは、`Slurm` と `AWS Batch` の 2 種類となっています。
+
 [Configuring AWS ParallelCluster](https://docs.aws.amazon.com/parallelcluster/latest/ug/getting-started-configuring-parallelcluster.html)
+
+### Parallel Cluster の実行に必要な IAM ロール
+
+強力な権限を付与して実行しても良いですが、できるだけ IAM ロールに割り振るポリシーは絞り込みたいです。AWS がミニマムな権限を示してくれているので、それらを参考にできます。
+
+[AWS Identity and Access Management roles in AWS ParallelCluster 3.x](https://docs.aws.amazon.com/parallelcluster/latest/ug/iam-roles-in-parallelcluster-v3.html)
+
+### Parallel Cluster のネットワーク構成
+
+すべてパブリックサブネットで構築するケースと、Head Node をパブリックサブネット、Compute Node をプライベートサブネットに分けるケースに大別される。
+
+このあたりは、要件やセキュリティレベルに応じて設定を考える必要がある。
+
+[Network configurations](https://docs.aws.amazon.com/parallelcluster/latest/ug/network-configuration-v3.html)
 
 ## 参考文献
 
 - [awsdocs - aws-parallelcluster-user-guide](https://github.com/awsdocs/aws-parallelcluster-user-guide)
+- [AWS Black Belt Online Seminar - AWS ParallelCluster ではじめるクラウド HPC](https://d1.awsstatic.com/webinars/jp/pdf/services/20200408_BlackBelt_ParallelCluster.pdf)
+- [AWS Black Belt Online Seminar - HPC on AWS](https://d1.awsstatic.com/webinars/jp/pdf/services/20201209_BlackBelt_HPC_on_AWS.pdf)
+- [Using cost allocation tags with AWS ParallelCluster](https://aws.amazon.com/jp/blogs/compute/using-cost-allocation-tags-with-aws-parallelcluster/)
+- [Monitoring dashboard for AWS ParallelCluster](https://aws.amazon.com/jp/blogs/compute/monitoring-dashboard-for-aws-parallelcluster/)
