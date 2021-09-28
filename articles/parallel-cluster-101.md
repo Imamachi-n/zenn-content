@@ -60,30 +60,48 @@ aws ec2 create-key-pair --key-name pcluster-key --query KeyMaterial --output tex
 
 ### Parallel Cluster の設定ファイルを書く
 
-まず、設定ファイルを配置するディレクトリを用意する。
+Slurm を使った必要最低限の設定ファイルは以下の通りになります。
 
-```bash
-mkdir -p ~/.parallelcluster
+```yaml
+Region: ap-northeast-1
+Image:
+  Os: alinux2
+HeadNode:
+  InstanceType: t3.micro
+  Networking:
+    SubnetId: subnet-02265a025d9462be1
+  Ssh:
+    KeyName: pcluster-key
+Scheduling:
+  Scheduler: slurm
+  SlurmQueues:
+    - Name: queue1
+      ComputeResources:
+        - Name: t3micro
+          InstanceType: t3.micro
+          MinCount: 0
+          MaxCount: 10
+      Networking:
+        SubnetIds:
+          - subnet-0bcea6a97db79b5ee
 ```
 
-続いて、以下の設定ファイルを作成する。
+#### 詳細
 
-```bash
-cat > ~/.parallelcluster/config << EOF
-[aws]
-aws_region_name = ap-northeast-1
-
-[cluster default]
-key_name = lab-3-your-key
-vpc_settings = public
-base_os = alinux2
-scheduler = slurm
-EOF
-```
+- `Region`: AWS リージョン
+- `Image`: EC2 インスタンスの AMI の情報
+  - `Os`: OS の種類（`alinux2`, `centos7`, `ubuntu1804`, `ubuntu2004`）
+- `HeadNode`: Head Node で使用する EC2 インスタンスの各種設定
+  - `InstanceType`: EC2 インスタンスタイプ（一度立ち上げたら最後、更新は効かない）
+  - `Networking`: ネットワーク構成
+    - `SubnetId`: サブネットの ID
+  - `Ssh`: EC2 インスタンスにアクセスするための SSH 情報
+    - `KeyName`: EC2 キーペア名
 
 ### 参考文献
 
-- [Configuration - AWS Parallel Cluster](https://docs.aws.amazon.com/parallelcluster/latest/ug/configuration.html)
+- [Cluster configuration file - AWS Parallel Cluster](https://docs.aws.amazon.com/parallelcluster/latest/ug/cluster-configuration-file-v3.html)
+- [example_configs - aws-parallelcluster](https://github.com/aws/aws-parallelcluster/tree/release-3.0/cli/tests/pcluster/example_configs)
 
 ## カスタムの設定をインスタンスに追加したい
 
