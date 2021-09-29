@@ -76,6 +76,7 @@ Scheduling:
   Scheduler: slurm
   SlurmQueues:
     - Name: queue1
+      CapacityType: SPOT
       ComputeResources:
         - Name: t3micro
           InstanceType: t3.micro
@@ -94,9 +95,21 @@ Scheduling:
 - `HeadNode`: Head Node で使用する EC2 インスタンスの各種設定
   - `InstanceType`: EC2 インスタンスタイプ（一度立ち上げたら最後、更新は効かない）
   - `Networking`: ネットワーク構成
-    - `SubnetId`: サブネットの ID
+    - `SubnetId`: Head Node を配置するサブネットの ID
   - `Ssh`: EC2 インスタンスにアクセスするための SSH 情報
     - `KeyName`: EC2 キーペア名
+- `Scheduling`: スケジューラの設定
+  - `Scheduler`: 使用するスケジューラ（`slurm`, `awsbatch`）
+  - `SlurmQueues`: slurm のキュー設定（slurm をスケジューラとして使用している場合のみ）
+    - `Name`: キューの任意の名前
+    - `CapacityType`: EC2 インスタンスのキャパシティ（`ONDEMAND`, `SPOT`）
+    - `ComputeResources`: コンピューティングリソース設定
+      - `name`: コンピューティング環境の任意の名前
+      - `InstanceType`: EC2 インスタンスタイプ
+      - `MinCount`: リソースの最小値
+      - `MaxCount`: リソースの最大値
+    - `Networking`: ネットワーク設定
+      - `SubnetIds`: キューを配置するサブネットの ID
 
 ### 参考文献
 
