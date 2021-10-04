@@ -174,6 +174,33 @@ AWS Parallel Cluster v2.x 系では、`TOML` の設定ファイルを使って�
 
 [Network configurations](https://docs.aws.amazon.com/parallelcluster/latest/ug/network-configuration-v3.html)
 
+### Elastic Fabric Adapter
+
+同じサブネット上の他のインスタンスとの**低レイテンシー**のネットワーク通信を実現するためのネットワークデバイスです。
+
+Compute Node とストレージがネットワーク通信してデータのやり取りを行っている以上、ネットワークのレイテンシーが処理上のボトルネックになる可能性があります。この問題を解消するために、AWS が用意しているネットワークデバイスが Elastic Fabric Adapter です。
+
+すべてのインスタンスで利用可能なわけではなく、以下のインスタンスでのみ使用可能です。
+
+- c5n.18xlarge
+- c5n.metal
+- g4dn.metal
+- i3en.24xlarge
+- i3en.metal
+- m5dn.24xlarge
+- m5n.24xlarge
+- m5zn.12xlarge
+- m5zn.metal
+- r5dn.24xlarge
+- r5n.24xlarge
+- p3dn.24xlarge
+- c6gn.16xlarge
+
+#### 参考文献
+
+- [Elastic Fabric Adapter - AWS ParallelCluster](https://docs.aws.amazon.com/ja_jp/parallelcluster/latest/ug/efa.html)
+- [AWS Elastic Fabric Adapter の通信速度評価](https://tech.preferred.jp/ja/blog/aws-elastic-fabric-adapter-evaluation/)
+
 ## 参考文献
 
 - [awsdocs - aws-parallelcluster-user-guide](https://github.com/awsdocs/aws-parallelcluster-user-guide)
