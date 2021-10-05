@@ -60,7 +60,7 @@ aws ec2 create-key-pair --key-name pcluster-key --query KeyMaterial --output tex
 
 ### Parallel Cluster の設定ファイルを書く
 
-Slurm を使った必要最低限の設定ファイルは以下の通りになります。
+Slurm を使った必要最低限の設定ファイルは以下の通りになります（`Region`, `Image`, `HeadNode`, `Scheduling` の項目）
 
 ```yaml
 Region: ap-northeast-1
@@ -85,6 +85,12 @@ Scheduling:
       Networking:
         SubnetIds:
           - subnet-0bcea6a97db79b5ee
+SharedStorage:
+  - MountDir: workspaces
+    Name: shared-ngs-resources
+    StorageType: FsxLustre
+    FsxLustreSettings:
+      StorageCapacity: 1200
 ```
 
 #### 詳細
@@ -110,6 +116,12 @@ Scheduling:
       - `MaxCount`: リソースの最大値
     - `Networking`: ネットワーク設定
       - `SubnetIds`: キューを配置するサブネットの ID
+- `SharedStorage`: 共有ストレージの設定
+  - `MountDir`: 共有ストレージをマウントするパス
+  - `Name`: 共有ストレージの名前
+  - `StorageType`: 共有ストレージのタイプ（サポートされる値は `Ebs`, `Efs`, `FsxLustre`）
+  - `FsxLustreSettings`: FSx for Lustre の各種設定
+    - `StorageCapacity`: Lustre ファイルシステムの FSx のストレージ容量 (`GiB` 単位) を設定
 
 ### 参考文献
 
@@ -200,6 +212,30 @@ Compute Node とストレージがネットワーク通信してデータのや�
 
 - [Elastic Fabric Adapter - AWS ParallelCluster](https://docs.aws.amazon.com/ja_jp/parallelcluster/latest/ug/efa.html)
 - [AWS Elastic Fabric Adapter の通信速度評価](https://tech.preferred.jp/ja/blog/aws-elastic-fabric-adapter-evaluation/)
+
+### Amazon FSx for Lustre について
+
+#### スクラッチ (Scratch) ファイルシステム
+
+スクラッチファイルシステムでは、以下のような目的に使われます。
+
+- 一時的なストレージとして使いたい
+- 短期間のデータ処理に使いたい
+
+ファイルシステムに障害が発生しても、データは複製されず保持されません（つまり、可用性は低いということ）短期間のワークロード向けなので、障害が発生してデータが消えてしまっても、データ処理をやり直せば良いケースに適しています。
+
+#### 永続 (Persistent) ファイルシステム
+
+永続ファイルシステムでは、以下のような目的で使われます。
+
+- 長期的に保持可能なストレージとして使いたい
+- 長期間のデータ処理に使いたい
+
+データはアベイラビリティーゾーン (AZ) 内で自動複製されます（つまり、高い可用性が担保されている）長期的・無期限に実行され、データが途中で消えてしまうと困る処理に適しています。
+
+#### 参考文献
+
+-[Amazon FSx for Lustre ファイルシステムのデプロイオプションの使用 - FSx for Lustre](https://docs.aws.amazon.com/ja_jp/fsx/latest/LustreGuide/using-fsx-lustre.html)
 
 ## 参考文献
 
