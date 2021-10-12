@@ -91,9 +91,10 @@ SharedStorage:
     StorageType: FsxLustre
     FsxLustreSettings:
       StorageCapacity: 1200
+      DeploymentType: SCRATCH_1
 ```
 
-#### 詳細
+#### 詳細 (必要最小限の設定)
 
 - `Region`: AWS リージョン
 - `Image`: EC2 インスタンスの AMI の情報
@@ -116,12 +117,17 @@ SharedStorage:
       - `MaxCount`: リソースの最大値
     - `Networking`: ネットワーク設定
       - `SubnetIds`: キューを配置するサブネットの ID
+
+#### 共有ストレージの設定 (Amazon FSx for Lustre のケース)
+
 - `SharedStorage`: 共有ストレージの設定
   - `MountDir`: 共有ストレージをマウントするパス
   - `Name`: 共有ストレージの名前
   - `StorageType`: 共有ストレージのタイプ（サポートされる値は `Ebs`, `Efs`, `FsxLustre`）
   - `FsxLustreSettings`: FSx for Lustre の各種設定
-    - `StorageCapacity`: Lustre ファイルシステムの FSx のストレージ容量 (`GiB` 単位) を設定
+    - `StorageCapacity`: Lustre ファイルシステムの FSx のストレージ容量 (`GiB` 単位) を設定 (1,200 GiB ~)
+    - `DeploymentType`: デプロイタイプ（`SCRATCH_1`、`SCRATCH_2`、`PERSISTENT_1`のいずれか。詳細は後述）
+    -
 
 ### 参考文献
 
@@ -213,7 +219,9 @@ Compute Node とストレージがネットワーク通信してデータのや�
 - [Elastic Fabric Adapter - AWS ParallelCluster](https://docs.aws.amazon.com/ja_jp/parallelcluster/latest/ug/efa.html)
 - [AWS Elastic Fabric Adapter の通信速度評価](https://tech.preferred.jp/ja/blog/aws-elastic-fabric-adapter-evaluation/)
 
-### Amazon FSx for Lustre について
+## Amazon FSx for Lustre について
+
+### ファイルシステム
 
 #### スクラッチ (Scratch) ファイルシステム
 
@@ -235,7 +243,19 @@ Compute Node とストレージがネットワーク通信してデータのや�
 
 #### 参考文献
 
--[Amazon FSx for Lustre ファイルシステムのデプロイオプションの使用 - FSx for Lustre](https://docs.aws.amazon.com/ja_jp/fsx/latest/LustreGuide/using-fsx-lustre.html)
+- [Amazon FSx for Lustre ファイルシステムのデプロイオプションの使用 - FSx for Lustre](https://docs.aws.amazon.com/ja_jp/fsx/latest/LustreGuide/using-fsx-lustre.html)
+
+### Lustre におけるデータ圧縮
+
+Lustre のデータ圧縮機能を利用することで、ファイルサーバとストレージ間ファイルシステムやバックアップストレージでコストを削減できます。また、Lustre ファイルサーバとストレージ（S3 など）間でのデータ転送量が小さくなるため、結果としてネットワークスループットの改善にも繋がります。
+
+データ圧縮を有効にすると、Amazon FSX for Lustre では、新しく書き込まれたファイルがディスクに書き込まれる前に自動的に圧縮され、読み込まれるときに自動的に解凍されます。
+
+データ圧縮では、LZ4 アルゴリズムを使用しており、ファイルシステムのパフォーマンスへの悪影響がなく、高圧縮であると謳われている（パフォーマンス指向のアルゴリズムで、圧縮速度が速く、高圧縮である…らしい）
+
+#### 参考文献
+
+- [Lustre data compression - FSx for Lustre](https://docs.aws.amazon.com/fsx/latest/LustreGuide/data-compression.html)
 
 ## 参考文献
 
