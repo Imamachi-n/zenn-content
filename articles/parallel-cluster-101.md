@@ -92,6 +92,8 @@ SharedStorage:
     FsxLustreSettings:
       StorageCapacity: 1200
       DeploymentType: SCRATCH_1
+      ExportPath: s3://ngs-data-bucket
+      ImportPath: s3://ngs-data-bucket/workspaces
 ```
 
 #### 詳細 (必要最小限の設定)
@@ -127,7 +129,8 @@ SharedStorage:
   - `FsxLustreSettings`: FSx for Lustre の各種設定
     - `StorageCapacity`: Lustre ファイルシステムの FSx のストレージ容量 (`GiB` 単位) を設定 (1,200 GiB ~)
     - `DeploymentType`: デプロイタイプ（`SCRATCH_1`、`SCRATCH_2`、`PERSISTENT_1`のいずれか。詳細は後述）
-    -
+    - `ExportPath`: Amazon FSx for Lustre ファイルシステムのルート（エクスポート先）となる S3 のパス
+    - `ImportPath`: FSx for Lustre ファイルシステムのデータリポジトリとして使用している S3 バケットへのパス(`ExportPath` と同一の S3 バケットである必要がある)
 
 ### 参考文献
 
@@ -256,6 +259,10 @@ Lustre のデータ圧縮機能を利用することで、ファイルサーバ�
 #### 参考文献
 
 - [Lustre data compression - FSx for Lustre](https://docs.aws.amazon.com/fsx/latest/LustreGuide/data-compression.html)
+
+### ExportPath と ImportPath について
+
+TODO: https://docs.aws.amazon.com/ja_jp/fsx/latest/LustreGuide/create-fs-linked-data-repo.html
 
 ## 参考文献
 
