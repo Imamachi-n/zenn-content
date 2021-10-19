@@ -260,9 +260,28 @@ Lustre のデータ圧縮機能を利用することで、ファイルサーバ�
 
 - [Lustre data compression - FSx for Lustre](https://docs.aws.amazon.com/fsx/latest/LustreGuide/data-compression.html)
 
-### ExportPath と ImportPath について
+### ImportPath と ExportPath について
 
-TODO: https://docs.aws.amazon.com/ja_jp/fsx/latest/LustreGuide/create-fs-linked-data-repo.html
+まず、Amazon FSx for Lustre は自動的に **S3 バケットを作ってくれません**。なので、すでに作成済みの S3 バケットを指定する必要があります。
+
+以下に具体例を示します。
+
+- `ImportPath`: インポート先の S3 バケットのパス
+  - 例 1.) s3://import-bucket
+  - 例 2.) s3://import-bucket/input-file-
+- `ExportPath`: エクスポート先の S3 バケットのパス
+  - 例 1.) s3://import-bucket
+  - 例 2.) s3://import-bucket/output
+
+例 1 のように、`ImportPath` と `ExportPath` に同じバケットを指定することが可能です。この場合、input データが output データによって上書きされるリスクがあるという点に注意です。
+
+`ImportPath` の例 2 のケースでは、`input-file-` というプレフィックスがついたファイル（オブジェクト）だけがインポートされます。
+
+`ExportPath` の例 2 のケースでは、`output` ディレクトリにファイルがエクスポートされます。
+
+#### 参考文献
+
+- [Lustre data compression - S3 バケットへのファイルシステムのリンク](https://docs.aws.amazon.com/ja_jp/fsx/latest/LustreGuide/create-fs-linked-data-repo.html)
 
 ## 参考文献
 
