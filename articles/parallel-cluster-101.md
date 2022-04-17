@@ -74,6 +74,8 @@ HeadNode:
     KeyName: pcluster-key
 Scheduling:
   Scheduler: slurm
+  SlurmSettings:
+    ScaledownIdletime: 10
   SlurmQueues:
     - Name: queue1
       CapacityType: SPOT
@@ -85,6 +87,17 @@ Scheduling:
       Networking:
         SubnetIds:
           - subnet-0bcea6a97db79b5ee
+      CustomActions:
+        OnNodeStart:
+          Script: https://test.tgz # s3:// | https://
+          Args:
+            - arg1
+            - arg2
+        OnNodeConfigured:
+          Script: https://test.tgz # s3:// | https://
+          Args:
+            - arg1
+            - arg2
 SharedStorage:
   - MountDir: workspaces
     Name: shared-ngs-resources
@@ -96,7 +109,9 @@ SharedStorage:
       ImportPath: s3://ngs-data-bucket/workspaces
 ```
 
-#### 詳細 (必要最小限の設定)
+#### 基本設定 + Head Node の設定
+
+※ 個人的に必要だと思っている設定のみを列挙しています。詳細は AWS の公式ドキュメントを参照のこと。
 
 - `Region`: AWS リージョン
 - `Image`: EC2 インスタンスの AMI の情報
@@ -107,8 +122,15 @@ SharedStorage:
     - `SubnetId`: Head Node を配置するサブネットの ID
   - `Ssh`: EC2 インスタンスにアクセスするための SSH 情報
     - `KeyName`: EC2 キーペア名
+
+#### スケジューラ（Worker Node）の設定
+
+※ 個人的に必要だと思っている設定のみを列挙しています。詳細は AWS の公式ドキュメントを参照のこと。
+
 - `Scheduling`: スケジューラの設定
   - `Scheduler`: 使用するスケジューラ（`slurm`, `awsbatch`）
+  - `SlurmSettings`: Slurm の基本設定
+    `ScaledownIdletime`: ジョブがない場合に node を終了する時間（分, デフォルト: 10 分）
   - `SlurmQueues`: slurm のキュー設定（slurm をスケジューラとして使用している場合のみ）
     - `Name`: キューの任意の名前
     - `CapacityType`: EC2 インスタンスのキャパシティ（`ONDEMAND`, `SPOT`）
@@ -119,6 +141,8 @@ SharedStorage:
       - `MaxCount`: リソースの最大値
     - `Networking`: ネットワーク設定
       - `SubnetIds`: キューを配置するサブネットの ID
+    - `CustomActions`: node で実行するカスタムスクリプトを指定
+      - `OnNodeStart`:
 
 #### 共有ストレージの設定 (Amazon FSx for Lustre のケース)
 
