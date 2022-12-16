@@ -8,31 +8,83 @@ published: false
 
 AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレスなバックエンドの構築に使われたり、サクッとバッチ処理を作るときに使われたりと、インフラをあまり意識せずにコードの実行環境として使える便利なサービスです（と思っています）
 
-今回は、実際の業務やプライベートを含めて、システム運用してたらトラブルに見舞われた AWS Lambda での苦い思い出話をまとめようと思います。初歩的なミスも多分に含まれると思うので、温かいで目で見てもらえるとー。
+今回は、実際の業務やプライベートを含めて、システム運用してたらトラブルに見舞われた AWS Lambda での苦い思い出話をまとめようと思います（ケースをある程度網羅するためにフィクションも含みます）。初歩的なミスも多分に含まれると思うので、温かいで目で見てもらえるとー。
 
 また、ここに書いてある解決策についても最善とは言えないものもあるかもしれません。その際は、コメントで指摘してもらえるとうれしいです。
 
-# 最大実行時間を超えてタイムアウトになった
+# 最大実行時間を超えて処理がタイムアウトした
 
-Lambda 関数をバッチ処理として使っていて、Lambda 関数の最大実行時間である 15 分を超えてしまいました。
+Lambda 関数をバッチ処理として使っている場合、Lambda 関数の最大実行時間が 15 分であることに注意しましょう（デフォルトでは Node.js だと 3 秒に設定されている点も注意）
 
-初歩的なミスとして、DB のテーブルにインデックスを貼り忘れた結果、ユーザ数の増加に伴いパフォーマンスが急激に悪化、Lambda 関数がタイムアウトしかけたことがありました（Lambda 関数の Duration のメトリクスがすごいことになってました…）
+初歩的なミスとして、DB のテーブルにインデックスを貼り忘れた結果、ユーザ数の増加に伴いパフォーマンスが急激に悪化、Lambda 関数がタイムアウトしかけたことがありました（Lambda 関数の実行時間（Duration）のメトリクスがすごいことになってました…）
 
-![](/images/lambda-problems/lambda_duration_max.png =250x)
+![](/images/lambda-problems/lambda_duration_max.png =500x)
 
-誰にも間違いはあります。問題になる前にできること、根本的な解決策として何が考えられるでしょうか？
+誰にでも間違いはあります。問題になる前にできること、根本的な解決策として何が考えられるでしょうか？
 
 ## まずは観測。問題になる前に検知しよう！
 
-Lambda 関数のデフォルト設定で、実行時間（Duration）の CloudWatch メトリクスが設定されています。上図のようなメトリクスを、AWS 管理コンソールの Lambda 関数の画面から確認できます。
+Lambda 関数のデフォルト設定で、実行時間（Duration）の CloudWatch メトリクスが見れます。上図のようなメトリクスを、AWS 管理コンソールの Lambda 関数の画面からも確認できます。
 
-目視でチェックするのも良いですが、CloudWatch Alarm を設定しておくと安心です。例えば、実行時間が上限の 90% を超えた場合にアラートを発火させる設定を行い、CloudWatch Alarm → SNS → AWS ChatBot 経由で Slack 通知することもできます。
+目視でチェックするのも良いですが、CloudWatch Alarm を設定しておくとより安心です。例えば、実行時間が上限の 90% を超えた場合にアラートを発火させる設定を行い、CloudWatch Alarm → SNS → AWS ChatBot 経由で Slack 通知してみる。  
+また、PagerDuty や Opsgenie などを使って、一箇所に通知をまとめても良いでしょう。
+
+![](/images/lambda-problems/cloudwatch_alarm.png =600x)
 
 実際、このアラートを設定しておいたおかげで、トラブルになる前に対策を打つことできました。
 
-##
+## 問題を解決するのはどうすればいいのか？
+
+上記の例では、DB 側のインデックスの問題なので解決は比較的簡単です。または、処理を並列化させて 1 つの Lambda 関数にかける処理時間を短縮することでも問題は解消可能です。
+
+ただ、処理時間が長くなりすぎて、どうしても Lambda 関数では処理しきれないケースも出てくるでしょう。そういった場合は、どんなサービスが使えるでしょうか？
+
+![](/images/lambda-problems/ecs_vs_batch.png =250x)
+
+### ECS Task
+
+ECS でサーバを運用しているケースでは、ECS task としてバッチ処理を実行するのが比較的簡単に設定できて、第一選択肢になるのではと思います。複雑なワークフローを組みたい場合は Step Functions と組み合わせることも可能です。  
+[Step Functions で Amazon ECS または Fargate タスクを管理する
+](https://docs.aws.amazon.com/ja_jp/step-functions/latest/dg/connect-ecs.html)
+
+### AWS batch
+
+ECS の運用環境がない場合の選択肢として、AWS Batch があります。AWS Batch はフルマネージドなバッチサービスで、内部的には ECS + キューを組み合わせた構成になっています。こちらも、Step Functions と組み合わせて複雑なワークフローを組むこともできます。  
+[AWS Batch](https://aws.amazon.com/jp/batch/)
+
+# メモリ不足（out of memory）になってしまった
+
+こちらも文字通り、メモリ不足の問題です。Lambda 関数に割り当てられるメモリは 128 MB〜10,240 MB（10 GB）までです。メモリを消費する処理を Lambda 関数を使って処理している場合は要注意です。
+
+## まずは観測。問題になる前に検知しよう！
+
+困ったことに、Lambda 関数のデフォルト設定では、消費メモリ量を CloudWatch メトリクスから取得できません。拡張メトリクスである Lambda Insights を別途導入する必要があります。
+
+### Lambda Insights
+
+![](/images/lambda-problems/lambda_memory.png =600x)
+
+AWS CDK から、`aws-cdk-lib.aws_lambda` や `aws-cdk-lib.aws_lambda_nodejs` モジュールで Lambda Insights を ON にできます。
+
+コード例としては以下になります。詳しくは、公式ドキュメントを参照のこと。  
+[aws-cdk-lib.aws_lambda module](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda-readme.html#lambda-insights)
+
+```js
+new lambda.Function(this, "MyFunction", {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  handler: "index.handler",
+  code: lambda.Code.fromAsset(path.join(__dirname, "lambda-handler")),
+  insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_98_0,
+});
+```
+
+# Lambda の初回起動が遅い（コールドスタートのレイテンシが気になる）
+
+# 同時実行数のデフォルト 1000 個を超えてしまった
 
 # Lambda 関数にデプロイするコードがでかすぎてアップロードできない
+
+コンテナイメージのコードパッケージサイズ
 
 # Lambda 関数の tmp ストレージが足りなくなった
 
