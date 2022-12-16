@@ -14,11 +14,11 @@ AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレ
 
 # 最大実行時間を超えてタイムアウトになった
 
-Lambda 関数をバッチ処理として使っているケースで、Lambda 関数の最大実行時間である 15 分を超えてしまったケースです。
+Lambda 関数をバッチ処理として使っていて、Lambda 関数の最大実行時間である 15 分を超えてしまいました。
 
 初歩的なミスとして、DB のテーブルにインデックスを貼り忘れた結果、ユーザ数の増加に伴いパフォーマンスが急激に悪化、Lambda 関数がタイムアウトしかけたことがありました（Lambda 関数の Duration のメトリクスがすごいことになってました…）
 
-![](/images/lambda-problems/lambda_duration_max.png =250px)
+![](/images/lambda-problems/lambda_duration_max.png =250x)
 
 誰にも間違いはあります。問題になる前にできること、根本的な解決策として何が考えられるでしょうか？
 
@@ -91,7 +91,7 @@ Lambda 関数内で Lambda 関数を呼び出す上記の設計では、エラ�
 
 また、ワークフロー図が可視化され、エラーが発生した場合はどのステップでエラーになったのか視覚的に把握できる点も Step Functions ならではの良さです。
 
-![](/images/lambda-problems/step_functions_img.png =250px)
+![](/images/lambda-problems/step_functions_img.png =250x)
 
 # まとめ
 
