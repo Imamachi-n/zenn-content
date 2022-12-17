@@ -55,7 +55,7 @@ AWS CDK で Lambda 関数を作成しており、`aws-cdk-lib.aws_lambda_nodejs`
 
 ### Lambda 関数のパフォーマンス最適化（割り当てメモリ量を引き上げる）
 
-その他に改善できることとしては、シンプルに割り当てメモリ量を増やしてみることです。Lambda 関数はメモリ量に応じて関数がしようできる仮想 CPU 量が決まります。つまり、メモリ量を増やすだけで処理パフォーマンスが上がります（CPU パフォーマンスに依存しない処理は早くならないですが）  
+その他に改善できることとしては、シンプルに割り当てメモリ量を増やしてみることです。Lambda 関数はメモリ量に応じて関数が使用できる仮想 CPU 量が決まります。つまり、メモリ量を増やすだけで処理パフォーマンスが上がります（CPU パフォーマンスに依存しない処理は早くならないですが）  
 [Operating Lambda: パフォーマンスの最適化 – Part 2 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/operating-lambda-performance-optimization-part-2/)
 
 コスト的にも、メモリ量 × 実行時間で課金されるので、メモリ量を増やしてその分だけ実行時間が短縮されれば、そこまでコスト増にならないはずです。例えば、以下のようなイメージです（コストの値は見やすいように適当な値にしてあります）
@@ -153,7 +153,7 @@ Lambda 関数は Firecracker と呼ばれる Rust で書かれたサーバレス
 まずは、Lambda 関数の response が遅い理由が、コールドスタートのレイテンシーに起因するものなのかどうか測定してみましょう。測定ツールは何でもいいと思いますが、ここでは以下の記事で使われていた [hey](https://github.com/rakyll/hey) というツールを使ってみました。  
 [VPC Lambda のコールドスタートにお悩みの方へ捧ぐコールドスタート予防のハック Lambda を定期実行するならメモリの割り当ては 1600M がオススメ？！](https://dev.classmethod.jp/articles/lambda-cold-start-avoid-hack/#toc-7)
 
-では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートが意図的に発生させましょう。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です。Lambda 関数は Node.js の実行環境を使っています。
+では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートを意図的に発生させます。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です。Lambda 関数は Node.js の実行環境を使っています。
 
 ```
 hey -n 500 -c 50 -H "Authorization: xxx" https://yyy.execute-api.ap-northeast-1.amazonaws.com/api/zzzz
