@@ -1,5 +1,5 @@
 ---
-title: "AWS Lambda でのトラブル事例・思い出話をまとめて見ました"
+title: "AWS Lambda でのトラブル事例とその解決策（案）についてまとめて見ました"
 emoji: "😱"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["lambda"]
@@ -237,7 +237,18 @@ lambda 関数から直接 JSON データを返すのやめて、いったん S3 
 
 # Lambda 関数にデプロイするコードサイズがでかすぎてアップロードできない
 
-コンテナイメージのコードパッケージサイズ
+ある時、Puppeteer を Lambda 関数上で動かしたいと思い、コードを書いてデプロイしたところ、コードサイズがでかすぎて Lambda にアップロードできませんでした。Lambda 関数のコードサイズには上限があり、解凍後 **250 MB** が上限となっています（2022/12 月現在）  
+[Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
+
+## 問題を解決するにはどうすればいいのか？
+
+まずは、コードサイズを削減する方法を検討してみます。例えば、Puppeteer の場合は [alixaxel/chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) という Lambda 向けの Chromium のバイナリを配布してくれているので、それを利用できます。  
+[ヘッドレス Chrome を AWS Lambda 上の Puppeteer から操作してみた | DevelopersIO](https://dev.classmethod.jp/articles/run-headless-chrome-puppeteer-on-aws-lambda/)
+
+### lambda コンテナイメージの作成
+
+250 MB のコードサイズの上限をどうしても超えてしまう場合の別の選択肢として、lambda コンテナイメージを自作して使うという手もあります。この仕組を使うと、コードサイズの上限は 10 GB まで許容できます。lambda 関数の手軽さはどこへいった…という気持ちになりますが…。  
+[Lambda コンテナイメージの作成 - AWS Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/images-create.html)
 
 # 同時実行数のデフォルト 1000 個を超えてしまった
 
@@ -286,6 +297,8 @@ Lambda 関数内で Lambda 関数を呼び出す上記の設計では、エラ�
 
 1 つ目は、2 つの Lambda 関数の処理の間に SQS をはさみ、1 つ目の Lambda 関数が処理時間のかかる処理を複数の分割し Queue に登録し、Queue 毎に 2 つ目の別の Lambda 関数で処理させるという設計です。こちらはよくあるパターン。
 [AWS Solutions - aws-lambda-sqs-lambda](https://docs.aws.amazon.com/solutions/latest/constructs/aws-lambda-sqs-lambda.html)
+
+![](/images/lambda-problems/lambda-sqs-lambda.png =350x)
 
 ### Step Functions で処理ワークフローを作る
 
