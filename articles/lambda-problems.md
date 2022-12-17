@@ -8,7 +8,7 @@ published: false
 
 AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレスなバックエンドの構築に使われたり、サクッとバッチ処理を作るときに使われたりと、インフラをあまり意識せずにコードの実行環境として使える便利なサービスです（と思っています）
 
-今回は、実際の業務やプライベートを含めて、システム運用してたらトラブルに見舞われた AWS Lambda での苦い思い出話をまとめようと思います（ケースをある程度網羅するためにフィクションも含みます）。初歩的なミスも多分に含まれると思うので、温かいで目で見てもらえるとー。
+今回は、実際の業務やプライベートを含めて、システム運用してたらトラブルに見舞われた AWS Lambda での苦い思い出とその対策をまとめようと思います（ケースをある程度網羅するためにフィクションも含みます）。初歩的なミスも多分に含まれると思うので、温かいで目で見てもらえるとー。
 
 また、ここに書いてある解決策についても最善とは言えないものもあるかもしれません。その際は、コメントで指摘してもらえるとうれしいです。
 
@@ -40,7 +40,33 @@ Lambda 関数のデフォルト設定で、実行時間（Duration）の CloudWa
 
 上記の例では、DB 側のインデックスの問題なので解決は比較的簡単です。または、処理を並列化させて 1 つの Lambda 関数にかける処理時間を短縮することでも問題は解消可能です。
 
-ただ、処理時間が長くなりすぎて、どうしても Lambda 関数では処理しきれないケースも出てくるでしょう。そういった場合は、どんなサービスが使えるでしょうか？
+### Lambda 関数のパフォーマンス最適化（割り当てメモリ量を引き上げる）
+
+その他に改善できることとしては、シンプルに割り当てメモリ量を増やしてみることです。Lambda 関数はメモリ量に応じて関数がしようできる仮想 CPU 量が決まります。つまり、メモリ量を増やすだけで処理パフォーマンスが上がります（CPU パフォーマンスに依存しない処理は早くならないですが）  
+[Operating Lambda: パフォーマンスの最適化 – Part 2 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/operating-lambda-performance-optimization-part-2/)
+
+コスト的にも、メモリ量 × 実行時間で課金されるので、メモリ量を増やしてその分だけ実行時間が短縮されれば、そこまでコスト増にならないはずです。例えば、以下のようなイメージです（コストの値は見やすいように適当な値にしてあります）
+
+| メモリ量 | 実行時間 | コスト |
+| -------- | -------- | ------ |
+| 128 MB   | 12 sec   | $10    |
+| 256 MB   | 6 sec    | $10    |
+| 512 MB   | 3 sec    | $10    |
+| 1024 MB  | 1.5 sec  | $10    |
+
+最適なコストを叩き出す、適切なメモリ量を厳密に決めたい場合は、AWS Lambda Power Tuning というツールがあります。これは、Step Functions を利用して、異なるメモリ量で該当の Lambda 関数を実行したときの実行時間からコストバランスが取れた最適なメモリ量を割り出してくれます。  
+[alexcasalboni/aws-lambda-power-tuning](https://github.com/alexcasalboni/aws-lambda-power-tuning)
+
+ツールを用意するのがめんどくさい人は、[AWS Compute Optimizer](https://aws.amazon.com/jp/compute-optimizer/) というサービスもあります。AWS 管理コンソールから Compute Optimizer をオプトインすると、自動的に Lambda 関数を解析してリソース不足・過剰を検知してくれます。
+
+例えば、以下のように最適なメモリ量をサジェストしてくれます。
+![](/images/lambda-problems/compute_opt.png)
+
+他にも、Lambda 関数のパフォーマンスチューニングの方法はあります。以下に様々なユースケースが載っていますので参考までにペタリ。
+[AWS Lambda Performance Tuning Deep Dive - Speaker Deck](https://speakerdeck.com/_kensh/aws-lambda-performance-tuning-deep-dive?slide=45)  
+[AWS Lambda Performance Tuning Deep Dive〜本当に知りたいのは”ここ”だった 〜(AWS-46) - YouTube](https://www.youtube.com/watch?v=SUNbX89fuRw)
+
+とはいえ、処理時間が長くなりすぎて、どうしても Lambda 関数では処理しきれないケースも出てくるでしょう。そういった場合は、どんなサービスが使えるでしょうか？以下で、2 パターンを考えてみました。
 
 ![](/images/lambda-problems/ecs_vs_batch.png =250x)
 
@@ -111,10 +137,10 @@ Lambda 関数は Firecracker と呼ばれる Rust で書かれたサーバレス
 
 ## Lambda 関数のコールドスタートのレイテンシーを測定してみる
 
-まずは、Lambda 関数の reponse が遅い理由が、コールドスタートのレイテンシーに起因するものなのかどうか測定してみましょう。測定ツールは何でもいいと思いますが、ここでは以下の記事で使われていた [hey](https://github.com/rakyll/hey) というツールを使ってみました。  
+まずは、Lambda 関数の response が遅い理由が、コールドスタートのレイテンシーに起因するものなのかどうか測定してみましょう。測定ツールは何でもいいと思いますが、ここでは以下の記事で使われていた [hey](https://github.com/rakyll/hey) というツールを使ってみました。  
 [VPC Lambda のコールドスタートにお悩みの方へ捧ぐコールドスタート予防のハック Lambda を定期実行するならメモリの割り当ては 1600M がオススメ？！](https://dev.classmethod.jp/articles/lambda-cold-start-avoid-hack/#toc-7)
 
-では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートが意図的に実行されるようにやってみましょう。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です。Lambda 関数は Node.js の実行環境を使っています。
+では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートが意図的に発生させましょう。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です。Lambda 関数は Node.js の実行環境を使っています。
 
 ```
 hey -n 500 -c 50 -H "Authorization: xxx" https://yyy.execute-api.ap-northeast-1.amazonaws.com/api/zzzz
@@ -157,13 +183,22 @@ Status code distribution:
 Lambda 関数のパフォーマンス最適化については、公式ブログでも言及されているので、こちらも参照ください。  
 [Operating Lambda: パフォーマンスの最適化 – Part 1 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/operating-lambda-performance-optimization-part-1/)
 
-### Provisioned Concurrency によるコールドスタートの削減
+### Provisioned Concurrency によるコールドスタートの短縮化
 
 Provisioned Concurrency は事前に立ち上がった状態（ウォームアップ（暖機）済み）の Lambda 関数を用意する機能です。事前起動する Lambda 関数の数を予約しておくことができます。
 
 ここでいう Concurrency（同時実行数）とは、Lambda 関数のメトリクスのうち、Concurrent Executions のカウント数に該当します。なので、現在のメトリクスを参照しつつ、予約する個数を決めれば良いと思います。
 
 ![](/images/lambda-problems/concurrent_executions.png =500x)
+
+気になるお値段ですが、以下で考えると **$70.42** となります（東京リージョンの場合）Lambda 自体が比較的お安いせいか、同時実行数次第で比較的高いコストに見えます…。  
+[AWS Pricing Calculator - Configure AWS Lambda](https://calculator.aws/#/addService/Lambda)
+
+- 同時実行数: **10 個**
+- プロビジョニングされた同時実行が有効になっている時間: **720 時間/月**（1 ヶ月まるまる有効）
+- リクエスト数: **10 万**
+- リクエスト処理時間: **1 sec**
+- メモリ量: **512 MB**
 
 ### Lambda SnapStart を使う
 
@@ -174,15 +209,39 @@ Lambda SnapStart は関数のスナップショット（キャッシュ）を保
 
 難しい設定は不要で、ただ SnapStart の機能を ON にするだけです。
 
-# 同時実行数のデフォルト 1000 個を超えてしまった
+# Lambda 関数の呼び出しペイロード（request / response）の最大値を超過した
+
+こちらも API Gateway + Lambda でサーバレスなバックエンドを構築した際のトラブルです。ある API でクソデカ JSON データを response として返しており、ある時以下のエラーが出ました。
+
+[413 Payload Too Large - HTTP | MDN](https://developer.mozilla.org/ja/docs/Web/HTTP/Status/413)
+
+```
+[ERROR] [1661317406359] LAMBDA_RUNTIME Failed to post handler success response. Http response code: 413.
+```
+
+Lambda の呼び出し Payload（リクエスト・レスポンス）の上限は 6 MB と決まっており、これを超過した場合、上記のような 413 エラーが発生します（2022/12 月現在。そもそも、そんな大きなデータを返すなという話かもしれませんが…）  
+[Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
+
+## 問題を解決するにはどうすればいいのか？
+
+JSON を response として返している場合は、ページングして 1 response あたりのデータ量を削減するという方法や、そもそも不要なデータを含んでいる場合は response データを削減してみるなどの方法が考えられます。
+
+一方で、画像データのように、1 ファイルあたりのデータ量が 6 MB を超えてしまう場合は、以下の方法が考えられます。
+
+### S3 の Pre-Signed URL を使う
+
+lambda 関数から直接 JSON データを返すのやめて、いったん S3 に保存します。lambda 関数から S3 のデータにアクセスするための Pre-Signed URL を発行し、データの代わりに URL を返すようにします。
+![](/images/lambda-problems/pre_signed_url.png =600x)
+[Lambda で 6MB を超えるデータを Return できなかったので、S3 の Pre-Signed URL を使った話](https://dev.classmethod.jp/articles/lambda-over-6mb-response-use-s3-pre-signed-url/)  
+[Presigned URL を利用した S3 へのファイルアップロード - KAKEHASHI Tech Blog](https://kakehashi-dev.hatenablog.com/entry/2022/03/15/101500)
 
 # Lambda 関数にデプロイするコードサイズがでかすぎてアップロードできない
 
 コンテナイメージのコードパッケージサイズ
 
-# Lambda 関数の tmp ストレージが足りなくなった
+# 同時実行数のデフォルト 1000 個を超えてしまった
 
-# Lambda 関数の呼び出しペイロード（request / response）の最大値を超過した
+# Lambda 関数の tmp ストレージが足りなくなった
 
 # ファイルディスクリプタの上限を超えてしまった
 
