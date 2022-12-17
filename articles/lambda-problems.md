@@ -12,15 +12,18 @@ AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレ
 
 また、ここに書いてある解決策についても最善とは言えないものもあるかもしれません。その際は、コメントで指摘してもらえるとうれしいです。
 
+それでは早速見ていきましょう！
+
 # 最大実行時間を超えて処理がタイムアウトした
 
-Lambda 関数をバッチ処理として使っている場合、Lambda 関数の最大実行時間が 15 分であることに注意しましょう（デフォルトでは Node.js だと 3 秒に設定されている点も注意）
+Lambda 関数をバッチ処理として使っている場合、Lambda 関数の最大実行時間が 15 分であることに注意が必要です（2022/12 月現在。デフォルトでは Node.js だと 3 秒に設定されている点も注意）  
+[Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
-初歩的なミスとして、DB のテーブルにインデックスを貼り忘れた結果、ユーザ数の増加に伴いパフォーマンスが急激に悪化、Lambda 関数がタイムアウトしかけたことがありました（Lambda 関数の実行時間（Duration）のメトリクスがすごいことになってました…）
+過去のやらかしとして、初歩的なミスで、DB のテーブルにインデックスを貼り忘れた結果、ユーザ数の増加に伴いパフォーマンスが急激に悪化、Lambda 関数がタイムアウトしかけたことがありました（Lambda 関数の実行時間（Duration）のメトリクスがすごいことになってました…）
 
 ![](/images/lambda-problems/lambda_duration_max.png =500x)
 
-誰にでも間違いはあります。問題になる前にできること、根本的な解決策として何が考えられるでしょうか？
+誰にでもミスはあります。問題になる前にできること、根本的な解決策としてそれぞれ何が考えられるでしょうか？
 
 ## まずは観測。問題になる前に検知しよう！
 
@@ -33,7 +36,7 @@ Lambda 関数のデフォルト設定で、実行時間（Duration）の CloudWa
 
 実際、このアラートを設定しておいたおかげで、トラブルになる前に対策を打つことできました。
 
-## 問題を解決するのはどうすればいいのか？
+## 問題を解決するにはどうすればいいのか？
 
 上記の例では、DB 側のインデックスの問題なので解決は比較的簡単です。または、処理を並列化させて 1 つの Lambda 関数にかける処理時間を短縮することでも問題は解消可能です。
 
@@ -54,17 +57,33 @@ ECS の運用環境がない場合の選択肢として、AWS Batch がありま
 
 # メモリ不足（out of memory）になってしまった
 
-こちらも文字通り、メモリ不足の問題です。Lambda 関数に割り当てられるメモリは 128 MB〜10,240 MB（10 GB）までです。メモリを消費する処理を Lambda 関数を使って処理している場合は要注意です。
+こちらも文字通り、メモリ不足の問題です。Lambda 関数に割り当てられるメモリは 128 MB〜10,240 MB（10 GB）までです（2022/12 月現在）。メモリを消費する処理を Lambda 関数を使って処理している場合は要注意です。  
+[Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
 ## まずは観測。問題になる前に検知しよう！
 
 困ったことに、Lambda 関数のデフォルト設定では、消費メモリ量を CloudWatch メトリクスから取得できません。拡張メトリクスである Lambda Insights を別途導入する必要があります。
 
-### Lambda Insights
-
 ![](/images/lambda-problems/lambda_memory.png =600x)
 
-AWS CDK から、`aws-cdk-lib.aws_lambda` や `aws-cdk-lib.aws_lambda_nodejs` モジュールで Lambda Insights を ON にできます。
+### Lambda Insights
+
+気になるお値段ですが、Lambda Insights のコストは、主に CloudWatch 分の料金になります。内訳は「8 つのメトリクス分」と「関数呼び出しごとに約 1 KB のログデータ分」となります。
+[Amazon CloudWatch での Lambda Insights の使用](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/monitoring-insights.html)
+
+概算ですが、以下の条件だと $3/月 くらいです（CloudWatch のコスト）
+
+- Lambda: 1 個
+- リクエスト数: 1,000/時間
+
+詳細な計算は AWS Pricing Calculator でコスト見積もりすると良いです。
+[AWS Pricing Calculator - Configure Amazon CloudWatch](https://calculator.aws/#/addService/CloudWatch)
+
+正直、めちゃ高いわけじゃないので、必要に応じて気軽に導入して良いと思っています。
+
+### AWS CDK から Lambda Insights を導入
+
+AWS CDK から、`aws-cdk-lib.aws_lambda` や `aws-cdk-lib.aws_lambda_nodejs` モジュールで Lambda Insights を ON にできます。もちろん、AWS 管理コンソールから画面ポチポチで設定も可能です。
 
 コード例としては以下になります。詳しくは、公式ドキュメントを参照のこと。  
 [aws-cdk-lib.aws_lambda module](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda-readme.html#lambda-insights)
@@ -78,11 +97,86 @@ new lambda.Function(this, "MyFunction", {
 });
 ```
 
+## 問題を解決するにはどうすればいいのか？
+
+まずは、メモリ消費を減らすようにコードを工夫したり、処理を分割して別々の Lambda 関数に処理させられないか検討してみて、それでも無理な場合は、こちらも最大実行時間の超過のケースと同様に、ECS task もしくは AWS Batch が選択肢に入ってきそうです。
+
 # Lambda の初回起動が遅い（コールドスタートのレイテンシが気になる）
+
+API Gateway + Lambda を組み合わせたサーバレスなバックエンドを構築した場合、Lambda の初回起動（コールドスタート）が遅いことが気がかりになるケースがあります。多少の遅延が許されるシステムなら無視することもできますが、そうでないユースケースも多くあるでしょう。
+
+Lambda 関数は Firecracker と呼ばれる Rust で書かれたサーバレス特化の MicroVM を使って実行環境を提供しています。起動速度は 125 ms（2018 年時点）とされており、現在はさらに高速化されています。ですが、Lambda 上で実行する言語の違いによっても起動速度が変わってきそうです。  
+[Firecracker – サーバーレスコンピューティングのための軽量な仮想化機能](https://aws.amazon.com/jp/blogs/news/firecracker-lightweight-virtualization-for-serverless-computing/)  
+[Lambda の裏側を知りたい人にオススメ Firecracker に関する論文「Firecracker: Lightweight Virtualization for Serverless Applications」の紹介](https://dev.classmethod.jp/articles/firecracker-lightweight-virtualization-for-serverless-applications/)
+
+## Lambda 関数のコールドスタートのレイテンシーを測定してみる
+
+まずは、Lambda 関数の reponse が遅い理由が、コールドスタートのレイテンシーに起因するものなのかどうか測定してみましょう。測定ツールは何でもいいと思いますが、ここでは以下の記事で使われていた [hey](https://github.com/rakyll/hey) というツールを使ってみました。  
+[VPC Lambda のコールドスタートにお悩みの方へ捧ぐコールドスタート予防のハック Lambda を定期実行するならメモリの割り当ては 1600M がオススメ？！](https://dev.classmethod.jp/articles/lambda-cold-start-avoid-hack/#toc-7)
+
+では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートが意図的に実行されるようにやってみましょう。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です。Lambda 関数は Node.js の実行環境を使っています。
+
+```
+hey -n 500 -c 50 -H "Authorization: xxx" https://yyy.execute-api.ap-northeast-1.amazonaws.com/api/zzzz
+```
+
+結果を見てみると、ほとんどのリクエストが 0.3 sec 程度で終了しています。一方で、**1〜2 sec 付近**に外れ値になっているリクエストがあります。これらがコールドスタートが発生した Lambda 関数のリクエストになります。
+
+```
+Summary:
+  Total:	3.1652 secs
+  Slowest:	2.1503 secs
+  Fastest:	0.0698 secs
+  Average:	0.2702 secs
+  Requests/sec:	157.9660
+
+  Total data:	1000 bytes
+  Size/request:	2 bytes
+
+Response time histogram:
+  0.070 [1]	|
+  0.278 [446]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.486 [3]	|
+  0.694 [0]	|
+  0.902 [0]	|
+  1.110 [0]	|
+  1.318 [15]	|■
+  1.526 [14]	|■
+  1.734 [0]	|
+  1.942 [9]	|■
+  2.150 [12]	|■
+
+Status code distribution:
+  [200]	500 responses
+```
+
+つまり、この結果から、Node.js の実行環境における Lambda 関数のコールドスタートのレイテンシーは、1〜2 sec 程度であることがわかります（これが許容範囲と見るかどうかはユースケースによる）
+
+## 問題を解決するにはどうすればいいのか？
+
+Lambda 関数のパフォーマンス最適化については、公式ブログでも言及されているので、こちらも参照ください。  
+[Operating Lambda: パフォーマンスの最適化 – Part 1 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/operating-lambda-performance-optimization-part-1/)
+
+### Provisioned Concurrency によるコールドスタートの削減
+
+Provisioned Concurrency は事前に立ち上がった状態（ウォームアップ（暖機）済み）の Lambda 関数を用意する機能です。事前起動する Lambda 関数の数を予約しておくことができます。
+
+ここでいう Concurrency（同時実行数）とは、Lambda 関数のメトリクスのうち、Concurrent Executions のカウント数に該当します。なので、現在のメトリクスを参照しつつ、予約する個数を決めれば良いと思います。
+
+![](/images/lambda-problems/concurrent_executions.png =500x)
+
+### Lambda SnapStart を使う
+
+Lambda SnapStart は関数のスナップショット（キャッシュ）を保存しておき、Lambda 関数を呼び出す前にそのスナップショットを復元し起動速度を高速化する機能です。
+
+2022/12 月現在では、Corretto (java11) ランタイムを利用する Java でのみ使用可能です。Lambda SnapStart を有効にすると、追加コストなしで最大で 10 倍の速さで起動できると書かれています。  
+[New – Lambda SnapStart で Lambda 関数を高速化 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/new-accelerate-your-lambda-functions-with-lambda-snapstart/)
+
+難しい設定は不要で、ただ SnapStart の機能を ON にするだけです。
 
 # 同時実行数のデフォルト 1000 個を超えてしまった
 
-# Lambda 関数にデプロイするコードがでかすぎてアップロードできない
+# Lambda 関数にデプロイするコードサイズがでかすぎてアップロードできない
 
 コンテナイメージのコードパッケージサイズ
 
