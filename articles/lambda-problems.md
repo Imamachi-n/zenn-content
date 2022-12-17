@@ -3,7 +3,7 @@ title: "AWS Lambda でのトラブル事例とその解決策（案）につい�
 emoji: "😱"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["lambda"]
-published: false
+published: true
 ---
 
 AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレスなバックエンドの構築に使ったり、サクッとバッチ処理を作るときに使ったりと、インフラをあまり意識せずにコードの実行環境として使える便利なサービスです（と思っています）
@@ -309,7 +309,7 @@ AWS アカウント単位での Lambda 関数の同時実行数（Concurrent Exe
 
 # 親 Lambda から子 Lambda を（繰り返し）呼び出してた
 
-まずはじめに、Lambda 関数内から別の Lambda 関数を呼び出さないほうが良いという教訓です。
+最後に、Lambda 関数内から別の Lambda 関数を呼び出さないほうが良いという教訓です。
 
 ある 1000 件くらいのデータ処理を行う Lambda 関数で書かれたバッチ処理がありました。この Lambda 関数では、親 Lambda が 1000 件のデータを 50 件のデータに分割し、内部で子 Lambda を呼び出してその 50 件のデータを渡して処理させる、ということをやっていました。
 
