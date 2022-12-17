@@ -6,9 +6,9 @@ topics: ["lambda"]
 published: false
 ---
 
-AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレスなバックエンドの構築に使われたり、サクッとバッチ処理を作るときに使われたりと、インフラをあまり意識せずにコードの実行環境として使える便利なサービスです（と思っています）
+AWS Lambda といえば、API Gateway + Lambda を組み合わせたサーバレスなバックエンドの構築に使ったり、サクッとバッチ処理を作るときに使ったりと、インフラをあまり意識せずにコードの実行環境として使える便利なサービスです（と思っています）
 
-今回は、実際の業務やプライベートを含めて、システム運用してたらトラブルに見舞われた AWS Lambda での苦い思い出とその対策をまとめようと思います（ケースをある程度網羅するためにフィクションも含みます）。初歩的なミスも多分に含まれると思うので、温かいで目で見てもらえるとー。
+今回は、実際の業務やプライベートを含めて、システム運用してたらトラブルに見舞われた AWS Lambda での苦い経験とその対策をまとめようと思います（ケースをある程度網羅するためにフィクションも含みます）。初歩的なミスも多分に含まれると思うので、温かいで目で見てもらえるとー。
 
 また、ここに書いてある解決策についても最善とは言えないものもあるかもしれません。その際は、コメントで指摘してもらえるとうれしいです。
 
@@ -39,6 +39,15 @@ Lambda 関数のデフォルト設定で、実行時間（Duration）の CloudWa
 ## 問題を解決するにはどうすればいいのか？
 
 上記の例では、DB 側のインデックスの問題なので解決は比較的簡単です。または、処理を並列化させて 1 つの Lambda 関数にかける処理時間を短縮することでも問題は解消可能です。
+
+### TCP keepAlive を有効化する（Node.js 限定）
+
+Node.js の Lambda 関数の場合、HTTP/HTTPS エージェントは `keepAlive` 接続がデフォルトで無効になっています。`AWS_NODEJS_CONNECTION_REUSE_ENABLED` 環境変数を `1` に設定すると、 keepAlive 接続が有効化され、接続の再利用による接続コストの軽減ができます。
+[Node.js で Keep-alive を使用して接続を再利用する - AWS SDK for JavaScript](https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v2/developer-guide/node-reusing-connections.html)  
+[AWS Lambda の Node.js ランタイムで TCP 接続を使いまわそう!(AWS_NODEJS_CONNECTION_REUSE_ENABLED) | DevelopersIO](https://dev.classmethod.jp/articles/aws-lambda-node-reusing-connections-keepalive/)
+
+AWS CDK で Lambda 関数を作成しており、`aws-cdk-lib.aws_lambda_nodejs` を使っている場合は、デフォルトの設定で `AWS_NODEJS_CONNECTION_REUSE_ENABLED = 1` になっているので気にする必要はありません。  
+[class NodejsFunction (construct) · AWS CDK](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs.NodejsFunction.html#awssdkconnectionreuse)
 
 ### Lambda 関数のパフォーマンス最適化（割り当てメモリ量を引き上げる）
 
@@ -209,7 +218,7 @@ Lambda SnapStart は関数のスナップショット（キャッシュ）を保
 
 難しい設定は不要で、ただ SnapStart の機能を ON にするだけです。
 
-# Lambda 関数の呼び出しペイロード（request / response）の最大値を超過した
+# Lambda 関数の呼び出しペイロード（request / response）の上限を超過した
 
 こちらも API Gateway + Lambda でサーバレスなバックエンドを構築した際のトラブルです。ある API でクソデカ JSON データを response として返しており、ある時以下のエラーが出ました。
 
@@ -250,13 +259,55 @@ lambda 関数から直接 JSON データを返すのやめて、いったん S3 
 250 MB のコードサイズの上限をどうしても超えてしまう場合の別の選択肢として、lambda コンテナイメージを自作して使うという手もあります。この仕組を使うと、コードサイズの上限は 10 GB まで許容できます。lambda 関数の手軽さはどこへいった…という気持ちになりますが…。  
 [Lambda コンテナイメージの作成 - AWS Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/images-create.html)
 
-# 同時実行数のデフォルト 1000 個を超えてしまった
+# ファイルディスクリプタの上限を超えてしまった
+
+ある時、以下のエラーが出ている事に気づきました。よくよく調べてみると、`Promise.all` で API を叩きまくっている箇所があり、結果としてファイルディスクリプタの上限を超えてしまい、処理落ちしているとわかりました。
+
+```js
+{
+  "errorType": "Runtime.UnhandledPromiseRejection",
+  "errorMessage": "FetchError: request to https://hoge.com/api/hoge failed, reason: connect EMFILE 10.111.111.111:443 - Local (undefined:undefined)",
+  "trace": [
+    "Runtime.UnhandledPromiseRejection: FetchError: request to https://hoge.com/api/hoge failed, reason: connect EMFILE 10.111.111.111:443 - Local (undefined:undefined)",
+    "    at process.<anonymous> (/var/runtime/index.js:100:10)",
+    "    at process.emit (events.js:400:28)",
+    "    at process.emit (domain.js:475:12)",
+    "    at processPromiseRejections (internal/process/promises.js:245:33)",
+    "    at processTicksAndRejections (internal/process/task_queues.js:96:32)"
+  ]
+}
+```
+
+## 問題を解決するにはどうすればいいのか？
+
+`Promise.all` で無制限に API を叩きまくるのは避けて、並行処理させる数を制限しましょう…。
 
 # Lambda 関数の tmp ストレージが足りなくなった
 
-# ファイルディスクリプタの上限を超えてしまった
+Lambda 関数に一時的にファイルを保存したいとき、`/tmp` ディレクトリが使えます。ただ、デフォルトでは 512 MB までしか使えないので、一時ファイルを作りまくるとストレージ不足で Lambda 関数の処理がエラーになってしまうことがあります。  
+[Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
-# 親 Lambda から子 Lambda を（繰り返し）呼び出す
+## 問題を解決するにはどうすればいいのか？
+
+一時ファイルを最後に削除して、ゴミファイルが残らないようにする。より大きなストレージが必要な場合は、10,240 MB（10 GB）までストレージ量を増やすこともできます。
+
+# 同時実行数のデフォルト 1000 個を超えてしまった
+
+バッチ処理でガンガン lambda 関数を使っていて、いつの間にか同時実行数が 1000 個を超過。他の lambda 関数にも影響が出てしまった…なんて話を聞いたことがあります。
+
+1 AWS アカウントあたりの lambda 関数のデフォルトの同時実行数は 1000 と決まっています。これを超えると lambda 関数をこれ以上起動させることができなくなります。  
+[Lambda クォータ - AWS Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#compute-and-storage)
+
+## まずは観測。問題になる前に検知しよう！
+
+AWS アカウント単位での Lambda 関数の同時実行数（Concurrent Executions）は、CloudWatch メトリクスで確認可能です。なので、CloudWatch Alarm で同時実行数が上限の 90% を超えたらアラームを発砲するといったような通知を整備しておきましょう。
+![](/images/lambda-problems/lambda_cloudwatch.png)
+
+## 問題を解決するにはどうすればいいのか？
+
+デフォルトの同時実行数を超えそうになった場合でも、AWS に問い合わせると、同時実行数は引き上げることができます（公式ドキュメントによると数万まで引き上げられそう？）
+
+# 親 Lambda から子 Lambda を（繰り返し）呼び出してた
 
 まずはじめに、Lambda 関数内から別の Lambda 関数を呼び出さないほうが良いという教訓です。
 
