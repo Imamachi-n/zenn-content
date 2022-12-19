@@ -1,5 +1,5 @@
 ---
-title: "AWS Lambda でのトラブル事例とその解決策（案）についてまとめて見ました"
+title: "AWS Lambda でのトラブル事例とその解決策（案）についてまとめてみました"
 emoji: "😱"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["lambda"]
