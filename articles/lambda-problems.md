@@ -67,7 +67,7 @@ AWS CDK で Lambda 関数を作成しており、`aws-cdk-lib.aws_lambda_nodejs`
 | 512 MB   | 3 sec    | $10    |
 | 1024 MB  | 1.5 sec  | $10    |
 
-最適なコストを叩き出す、適切なメモリ量を厳密に決めたい場合は、AWS Lambda Power Tuning というツールがあります。これは、Step Functions を利用して、異なるメモリ量で該当の Lambda 関数を実行したときの実行時間からコストバランスが取れた最適なメモリ量を割り出してくれます。  
+実行時間とコストバランスの取れた適切なメモリ量を厳密に決めたい場合は、AWS Lambda Power Tuning というツールがあります。このツールでは、内部的に Step Functions を利用して、異なるメモリ量で該当の Lambda 関数を実行した結果から最適なメモリ量を割り出してくれます。  
 [alexcasalboni/aws-lambda-power-tuning](https://github.com/alexcasalboni/aws-lambda-power-tuning)
 
 ツールを用意するのがめんどくさい人は、[AWS Compute Optimizer](https://aws.amazon.com/jp/compute-optimizer/) というサービスもあります。AWS 管理コンソールから Compute Optimizer をオプトインすると、自動的に Lambda 関数を解析してリソース不足・過剰を検知してくれます。
@@ -96,7 +96,7 @@ ECS の運用環境がない場合の選択肢として、AWS Batch がありま
 
 # メモリ不足（out of memory）になってしまった
 
-こちらも文字通り、メモリ不足の問題です。Lambda 関数に割り当てられるメモリは 128 MB〜10,240 MB（10 GB）までです（2022/12 月現在）。メモリを消費する処理を Lambda 関数を使って処理している場合は要注意です。  
+こちらは文字通り、メモリ不足の問題です。Lambda 関数に割り当てられるメモリは 128 MB〜10,240 MB（10 GB）までです（2022/12 月現在）。メモリを消費する処理を Lambda 関数を使って処理している場合は要注意です。  
 [Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
 ## まずは観測。問題になる前に検知しよう！
@@ -138,7 +138,7 @@ new lambda.Function(this, "MyFunction", {
 
 ## 問題を解決するにはどうすればいいのか？
 
-まずは、メモリ消費を減らすようにコードを工夫したり、処理を分割して別々の Lambda 関数に処理させられないか検討してみて、それでも無理な場合は、こちらも最大実行時間の超過のケースと同様に、ECS task もしくは AWS Batch が選択肢に入ってきそうです。
+月並みな話になってしまいますが、メモリ消費を減らすようにコードを工夫したり、処理を分割して別々の Lambda 関数に処理させられないか検討してみて、それでも無理な場合は、こちらも最大実行時間の超過のケースと同様に、ECS task もしくは AWS Batch が選択肢に入ってきそうです。
 
 # Lambda の初回起動が遅い（コールドスタートのレイテンシが気になる）
 
@@ -153,7 +153,7 @@ Lambda 関数は Firecracker と呼ばれる Rust で書かれたサーバレス
 まずは、Lambda 関数の response が遅い理由が、コールドスタートのレイテンシーに起因するものなのかどうか測定してみましょう。測定ツールは何でもいいと思いますが、ここでは以下の記事で使われていた [hey](https://github.com/rakyll/hey) というツールを使ってみました。  
 [VPC Lambda のコールドスタートにお悩みの方へ捧ぐコールドスタート予防のハック Lambda を定期実行するならメモリの割り当ては 1600M がオススメ？！](https://dev.classmethod.jp/articles/lambda-cold-start-avoid-hack/#toc-7)
 
-では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートを意図的に発生させます。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です。Lambda 関数は Node.js の実行環境を使っています。
+では、並列で大量のリクエストを飛ばすことで、Lambda のコールドスタートを意図的に発生させます。以下のコマンドは、API Gateway に対して、合計 500 リクエストを 50 並列で実行するという意味です（Cognito 等のサービスで認証をしている想定で Authorization ヘッダーの指定をしてあります）。Lambda 関数は Node.js の実行環境を使っています。
 
 ```
 hey -n 500 -c 50 -H "Authorization: xxx" https://yyy.execute-api.ap-northeast-1.amazonaws.com/api/zzzz
@@ -189,11 +189,11 @@ Status code distribution:
   [200]	500 responses
 ```
 
-つまり、この結果から、Node.js の実行環境における Lambda 関数のコールドスタートのレイテンシーは、1〜2 sec 程度であることがわかります（これが許容範囲と見るかどうかはユースケースによる）
+つまり、この結果から、Node.js の実行環境における Lambda 関数のコールドスタートのレイテンシーは、平均的な response 時間である 0.2 sec を差し引いた外れ値の response 時間である **1〜2 sec 程度** であることがわかります（これが許容範囲と見るかどうかはユースケースによる）
 
 ## 問題を解決するにはどうすればいいのか？
 
-Lambda 関数のパフォーマンス最適化については、公式ブログでも言及されているので、こちらも参照ください。  
+Lambda 関数のパフォーマンス最適化については、公式ブログでも言及されているのでこちらも参照ください。  
 [Operating Lambda: パフォーマンスの最適化 – Part 1 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/operating-lambda-performance-optimization-part-1/)
 
 ### Provisioned Concurrency によるコールドスタートの短縮化
@@ -224,7 +224,7 @@ Lambda SnapStart は関数のスナップショット（キャッシュ）を保
 
 # Lambda 関数の呼び出しペイロード（request / response）の上限を超過した
 
-こちらも API Gateway + Lambda でサーバレスなバックエンドを構築した際のトラブルです。ある API でクソデカ JSON データを response として返しており、ある時以下のエラーが出ました。
+こちらも API Gateway + Lambda でサーバレスなバックエンドを構築した際のトラブルです。過去のやらかしとして、ある API でクソデカ JSON データを response として返しており、ある時以下のエラーが出るようになりました…。
 
 [413 Payload Too Large - HTTP | MDN](https://developer.mozilla.org/ja/docs/Web/HTTP/Status/413)
 
@@ -232,31 +232,41 @@ Lambda SnapStart は関数のスナップショット（キャッシュ）を保
 [ERROR] [1661317406359] LAMBDA_RUNTIME Failed to post handler success response. Http response code: 413.
 ```
 
-Lambda の呼び出し Payload（リクエスト・レスポンス）の上限は 6 MB と決まっており、これを超過した場合、上記のような 413 エラーが発生します（2022/12 月現在。そもそも、そんな大きなデータを返すなという話かもしれませんが…）  
+このエラーは、Lambda の Payload 上限を超えたことが原因です。Lambda の呼び出し Payload（リクエスト・レスポンス）の上限は 6 MB と決まっており、これを超過した場合、上記のような 413 エラーが発生します（2022/12 月現在。そもそも、そんな大きなデータを返すなという話かもしれませんが…）  
 [Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
 ## 問題を解決するにはどうすればいいのか？
 
 JSON を response として返している場合は、ページングして 1 response あたりのデータ量を削減するという方法や、そもそも不要なデータを含んでいる場合は response データを削減してみるなどの方法が考えられます。
 
-一方で、画像データのように、1 ファイルあたりのデータ量が 6 MB を超えてしまう場合は、以下の方法が考えられます。
+一方で、画像データのように 1 ファイルあたりのデータ量が 6 MB を超えてしまう場合もありますよね。その場合は、以下の方法が考えられます。
 
 ### S3 の Pre-Signed URL を使う
 
-lambda 関数から直接 JSON データを返すのやめて、いったん S3 に保存します。lambda 関数から S3 のデータにアクセスするための Pre-Signed URL を発行し、データの代わりに URL を返すようにします。
+解決方法として、lambda 関数から直接 JSON データを返すのやめて、いったん S3 に保存する方法があります。lambda 関数から直接データを返すのではなく、 S3 のデータにアクセスするための Pre-Signed URL を発行し、データの代わりに URL を返すようにします。
 ![](/images/lambda-problems/pre_signed_url.png =600x)
 [Lambda で 6MB を超えるデータを Return できなかったので、S3 の Pre-Signed URL を使った話](https://dev.classmethod.jp/articles/lambda-over-6mb-response-use-s3-pre-signed-url/)  
 [Presigned URL を利用した S3 へのファイルアップロード - KAKEHASHI Tech Blog](https://kakehashi-dev.hatenablog.com/entry/2022/03/15/101500)
 
 # Lambda 関数にデプロイするコードサイズがでかすぎてアップロードできない
 
-ある時、Puppeteer を Lambda 関数上で動かしたいと思い、コードを書いてデプロイしたところ、コードサイズがでかすぎて Lambda にアップロードできませんでした。Lambda 関数のコードサイズには上限があり、解凍後 **250 MB** が上限となっています（2022/12 月現在）  
+ある時、Puppeteer を Lambda 関数上で動かしたいと思い、コードを書いてデプロイしたところ、コードサイズがでかすぎて Lambda にアップロードできませんでした。原因は、Lambda 関数のコードサイズ上限です。Lambda 関数のコードサイズの上限は、解凍後で **250 MB** までとなっています（2022/12 月現在）  
 [Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
 ## 問題を解決するにはどうすればいいのか？
 
 まずは、コードサイズを削減する方法を検討してみます。例えば、Puppeteer の場合は [alixaxel/chrome-aws-lambda](https://github.com/alixaxel/chrome-aws-lambda) という Lambda 向けの Chromium のバイナリを配布してくれているので、それを利用できます。  
 [ヘッドレス Chrome を AWS Lambda 上の Puppeteer から操作してみた | DevelopersIO](https://dev.classmethod.jp/articles/run-headless-chrome-puppeteer-on-aws-lambda/)
+
+### 依存パッケージの削減
+
+あとは、Node.js の場合であれば、webpack や esbuild などのバンドラを使い tree shaking で実行されないコードを削除した上で Lambda にデプロイする方法が推奨されます。
+
+AWS CDK を使っている場合は、`aws-cdk-lib.aws_lambda_nodejs` モジュールを使うことで内部的に `esbuild` を使って Lambda 関数をデプロイしてくれます。  
+[aws-cdk-lib.aws_lambda_nodejs module · AWS CDK](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_lambda_nodejs-readme.html)
+
+むやみやたらにトップレベルのインポートをするのは止めましょう。余計なモジュールが増えコードサイズが肥大化する原因となります。  
+[AWS Lambda の Node.js 依存関係を最適化 | Amazon Web Services ブログ](https://aws.amazon.com/jp/blogs/news/optimizing-node-js-dependencies-in-aws-lambda/)
 
 ### lambda コンテナイメージの作成
 
@@ -265,7 +275,7 @@ lambda 関数から直接 JSON データを返すのやめて、いったん S3 
 
 # ファイルディスクリプタの上限を超えてしまった
 
-ある時、以下のエラーが出ている事に気づきました。よくよく調べてみると、`Promise.all` で API を叩きまくっている箇所があり、結果としてファイルディスクリプタの上限を超えてしまい、処理落ちしているとわかりました。
+ある時、以下のエラーが出ている事に気づきました。よくよく調べてみると、`Promise.all` で API を叩きまくっている箇所があり、結果としてファイルディスクリプタの上限を超えてしまっており、処理落ちしているとわかりました。
 
 ```js
 {
@@ -291,15 +301,17 @@ lambda 関数から直接 JSON データを返すのやめて、いったん S3 
 Lambda 関数に一時的にファイルを保存したいとき、`/tmp` ディレクトリが使えます。ただ、デフォルトでは 512 MB までしか使えないので、一時ファイルを作りまくるとストレージ不足で Lambda 関数の処理がエラーになってしまうことがあります。  
 [Lambda クォータ - 関数の設定、デプロイ、実行](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#function-configuration-deployment-and-execution)
 
+Lambda 関数は 1 リクエスト毎に起動するわけではなく、リクエストをさばいた後、しばらく起動した状態を維持します。同じ Lambda 関数で一時ファイルを生成する処理が繰り返し実行されると、一時ファイルが Lambda 関数に蓄積されていき、ある地点でストレージ不足を引き起こすケースもあります。
+
 ## 問題を解決するにはどうすればいいのか？
 
 一時ファイルを最後に削除して、ゴミファイルが残らないようにする。より大きなストレージが必要な場合は、10,240 MB（10 GB）までストレージ量を増やすこともできます。
 
 # 同時実行数のデフォルト 1000 個を超えてしまった
 
-バッチ処理でガンガン lambda 関数を使っていて、いつの間にか同時実行数が 1000 個を超過。他の lambda 関数にも影響が出てしまった…なんて話を聞いたことがあります。
+バッチ処理でガンガン lambda 関数を使っていて、いつの間にか同時実行数が 1000 個を超過してしまい、他の lambda 関数が起動できなくなった…なんて話を聞いたことがあります。
 
-1 AWS アカウントあたりの lambda 関数のデフォルトの同時実行数は 1000 と決まっています。これを超えると lambda 関数をこれ以上起動させることができなくなります。  
+原因は、1 AWS アカウントあたりの lambda 関数のデフォルトの同時実行数は 1000 と決まっているためです。これを超えると lambda 関数をこれ以上起動させることができなくなります。  
 [Lambda クォータ - AWS Lambda](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/gettingstarted-limits.html#compute-and-storage)
 
 ## まずは観測。問題になる前に検知しよう！
