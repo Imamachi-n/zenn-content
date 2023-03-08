@@ -3,7 +3,7 @@ title: "CureApp インフラわいがや会 2023/03/03 議事録"
 emoji: "😎"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["AWS", "WAF", "AppRunner", "NestJS", "JWT"]
-published: false
+published: true
 ---
 
 :::message
