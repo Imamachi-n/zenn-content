@@ -4,6 +4,7 @@ emoji: "😎"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["AWS", "WAF", "AppRunner", "NestJS", "JWT"]
 published: true
+publication_name: "cureapp"
 ---
 
 :::message
