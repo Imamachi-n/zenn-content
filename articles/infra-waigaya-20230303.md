@@ -79,13 +79,13 @@ packages/hoge-mobile/ios/HogeMobileTests/Info.plist: <string>%.%.%</string>
 
 ```bash
 # パッチバージョンを上げる
-bmp -j
+bmp -p
 
 # マイナーバージョンを上げる
 bmp -m
 
 # メジャーバージョンを上げる
-bmp -p
+bmp -j
 ```
 
 ## まとめ
