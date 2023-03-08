@@ -142,10 +142,17 @@ bmp -j
 
 - [JSON web トークンの検証 - Amazon Cognito](https://docs.aws.amazon.com/ja_jp/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html)
   - token が改ざんされておらず、期限切れでもなく、有効な署名が付いているかなどを検証するためのもの
-- 検証用のライブラリはこれが推奨らしい（Cognito を使っている場合）
+
+## Cognito を使っている場合
+
+- 検証用のライブラリはこれが推奨らしい
   - [awslabs/aws-jwt-verify: JS library for verifying JWTs signed by Amazon Cognito, and any OIDC-compatible IDP that signs JWTs with RS256, RS384, and RS512](https://github.com/awslabs/aws-jwt-verify)
 - 例
   - [Using Cognito groups to control access to API endpoints - DEV Community](https://dev.to/aws-builders/using-cognito-groups-to-control-access-to-api-endpoints-346g)
+
+## Auth0 を使っている場合
+
+- [auth0/node-jsonwebtoken: JsonWebToken implementation for node.js http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html](https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback)
 
 # CloudWatch Logs もデータ保護ポリシーなるものが追加されました
 
