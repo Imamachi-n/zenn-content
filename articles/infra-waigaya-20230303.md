@@ -33,10 +33,14 @@ lerna version major --no-git-tag-version
 - `android/`, `ios/` 配下にある Android・iOS アプリのバージョン上げは react-native-version というコマンドツールを使っています。
   - https://www.npmjs.com/package/react-native-version
 
-実行するコマンドは以下。
+実行するコマンドは以下（`packages.json` の scirpts に追加して実行）
 
-```
-"version-bump": "react-native-version --never-amend"
+```json
+{
+  "scripts": {
+    "version-bump": "react-native-version --never-amend"
+  }
+}
 ```
 
 ## パターンマッチでバージョン番号を繰り上げる
