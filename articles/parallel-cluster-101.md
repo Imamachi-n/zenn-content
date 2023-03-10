@@ -1,5 +1,5 @@
 ---
-title: "AWS Parallel Cluster 101"
+title: "AWS Parallel Cluster: おうちで始めるゲノム解析入門"
 emoji: "💻"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["HPC", "ParallelCluster"]
