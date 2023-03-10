@@ -11,6 +11,6 @@
     "prv": "zenn preview"
   },
   "dependencies": {
-    "zenn-cli": "^0.1.134"
+    "zenn-cli": "^0.1.141"
   }
 }
