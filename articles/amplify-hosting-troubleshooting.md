@@ -3,7 +3,7 @@ title: "Amplify Hosting に Next.js アプリをデプロイする際のトラ�
 emoji: "😭"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["AmplifyHosting", "Nextjs"]
-published: false
+published: true
 publication_name: "cureapp"
 ---
 
