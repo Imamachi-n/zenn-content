@@ -2,7 +2,7 @@
 title: "Amplify Hosting に Next.js アプリをデプロイする際のトラブルシューティング"
 emoji: "😭"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["AmplifyHosting", "Nextjs"]
+topics: ["AmplifyHosting", "Amplify", "Nextjs"]
 published: true
 publication_name: "cureapp"
 ---
