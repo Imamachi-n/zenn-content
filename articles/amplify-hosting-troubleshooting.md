@@ -62,7 +62,7 @@ applications:
 
 ![](/images/amplify-hosting-troubleshooting/build_image_settings_1.png =500x)
 
-結果として、Node.js v18 は `GLIBC_2.27` と `GLIBC_2.28` の両方が必要なため、デフォルトイメージを使うと以下のエラーが発生します。
+Node.js v18 は `GLIBC_2.27` と `GLIBC_2.28` の両方が必要なため、結果として、デフォルトイメージを使うと以下のエラーが発生します。
 
 ```bash
 node: /lib64/libm.so.6: version `GLIBC_2.27' not found (required by node)
@@ -161,6 +161,6 @@ See more info here https://nextjs.org/docs/messages/deprecated-target-config
 cognito User does not exist
 ```
 
-### 解決策：１からプラットフォームに `ウェブコンピューティング` を指定した環境構築を行う
+### 解決策：プラットフォームに `ウェブコンピューティング` を指定した環境構築を１から構築する
 
 `ウェブ動的` から `ウェブコンピューティング` へのマイグレーションを諦め、１から環境構築を行うと解決します（泣）
