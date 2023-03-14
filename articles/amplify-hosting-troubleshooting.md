@@ -161,6 +161,6 @@ See more info here https://nextjs.org/docs/messages/deprecated-target-config
 cognito User does not exist
 ```
 
-### 解決策：プラットフォームに `ウェブコンピューティング` を指定した環境構築を１から構築する
+### 解決策：プラットフォームに `ウェブコンピューティング` を指定した環境を１から構築する
 
 `ウェブ動的` から `ウェブコンピューティング` へのマイグレーションを諦め、１から環境構築を行うと解決します（泣）
