@@ -37,7 +37,7 @@ RUN npm install --global pnpm
 以下のコードから抜粋。
 https://github.com/aws/aws-cdk/blob/07d3aa74e6c1a7b3b7ddf298cf3cc4b7ff180b48/packages/%40aws-cdk/aws-lambda-nodejs/lib/Dockerfile#L10
 
-最近、pnpm のメジャーバージョンである v8.x 系リリースされ、上記の記述だと pnpm v8.x 系がインストールされる。pnpm v8.x 系では Node.js v14 以下のバージョンに対応しなくなり、結果として Node.js v14 以下のコードをデプロイしようとするとバンドル時にエラーとなります…。
+最近、pnpm のメジャーバージョンである v8.x 系リリースされ、上記の記述だと pnpm v8.x 系がインストールされるようになってしまいました。pnpm v8.x 系では Node.js v14 以下のバージョンに対応しなくなり、結果として Node.js v14 以下のコードをデプロイしようとするとバンドル時にエラーとなった…というわけです。
 
 ## 解決策（ワークアラウンド）
 
