@@ -27,7 +27,7 @@ Visit https://r.pnpm.io/comp to see the list of past pnpm versions with respecti
 
 ### 何が原因なのか？
 
-aws-lambda-nodejs は Docker コンテナ上で TypeScript のコードからバンドルを行っており、このとき使用される Docker イメージの `pnpm` のバージョンが固定されていない。
+aws-lambda-nodejs は Docker コンテナ上で TypeScript のコードからバンドルを行っており、このとき使用される Docker イメージの `pnpm` のバージョンが固定されていません（あくまで、**2023/03/29 14 時時点** の話です）
 
 ```docker
 # Install pnpm
@@ -37,7 +37,7 @@ RUN npm install --global pnpm
 以下のコードから抜粋。
 https://github.com/aws/aws-cdk/blob/07d3aa74e6c1a7b3b7ddf298cf3cc4b7ff180b48/packages/%40aws-cdk/aws-lambda-nodejs/lib/Dockerfile#L10
 
-最近、pnpm のメジャーバージョンがリリースされ、上記の記述だと pnpm v8.x 系がインストールされる。pnpm v8.x 系は Node.js v16 以上のバージョンにしか対応しなくなり、Node.js v14 以下を使っている場合だと、バンドル時にエラーとなる。
+最近、pnpm のメジャーバージョンである v8.x 系リリースされ、上記の記述だと pnpm v8.x 系がインストールされる。pnpm v8.x 系では Node.js v14 以下のバージョンに対応しなくなり、結果として Node.js v14 以下のコードをデプロイしようとするとバンドル時にエラーとなります…。
 
 ## 解決策（ワークアラウンド）
 
@@ -78,7 +78,7 @@ yarn patch-package aws-cdk-lib
 
 ![](/images/aws-lambda-nodejs-pnpm-error/patch_img.png)
 
-最後に、デプロイを実行すると、ログで pnpm がバージョン固定されてインストールされたことが確認できると思います。
+最後に、デプロイを実行して、ログで以下のように pnpm がバージョン固定されてインストールされたら成功です！
 
 ```
 Step 4/13 : RUN npm install --global pnpm@7.30.5
