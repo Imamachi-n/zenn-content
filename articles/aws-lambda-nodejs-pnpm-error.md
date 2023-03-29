@@ -1,5 +1,5 @@
 ---
-title: "aws-lambda-nodejs を使ってデプロイする際に pnpm が Node.js v14 に非対応となりエラーになる問題を解消する"
+title: "AWS CDK(aws-lambda-nodejs)のデプロイ時にNode.js v14非対応のpnpm v8が使われエラーになる問題を解消"
 emoji: "😱"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["AWSCDK", "lambda", "AwsLambdaNodejs"]
