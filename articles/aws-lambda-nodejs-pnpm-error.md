@@ -15,7 +15,7 @@ publication_name: "cureapp"
 
 ## 発端
 
-2023/03/28、何もコードを変更していないのに、aws-lambda-nodejs を使った Lambda 関数へのコードのデプロイができなくなった。エラーは以下。
+2023/03/28、何もコードを変更していないのに、aws-lambda-nodejs を使った Lambda 関数へのコードのデプロイができなくなってしまいました…。エラーは以下。
 
 ```
 ERROR: This version of pnpm requires at least Node.js v16.4
@@ -23,7 +23,7 @@ The current version of Node.js is v14.21.3
 Visit https://r.pnpm.io/comp to see the list of past pnpm versions with respective Node.js version support.
 ```
 
-以下は、AWS CDK に上がっている Issue。
+以下は、AWS CDK に上がっている Issue になります。
 
 [CDK Deployment crashes: Dockerfile aws-lambda-nodejs/lib/Dockerfile has unsupported version of NodeJs 14 for new pnpm version · Issue #24820 · aws/aws-cdk](https://github.com/aws/aws-cdk/issues/24820)
 
@@ -52,7 +52,7 @@ new NodejsFunction(this, "MyFunction", {
 
 ### 何が原因だったのか？
 
-前述の通り、aws-lambda-nodejs は Docker コンテナ上で TypeScript のコードからバンドルを行っています。このとき使用される Docker ファイルの中身を見てみると `pnpm` がインストールされています。少なくとも、**2023/03/29 14 時時点**ではバージョンが固定されていませんでした。
+前述の通り、aws-lambda-nodejs は Docker コンテナ上で TypeScript のコードからバンドルを行っています。このとき使用される Docker ファイルの中身を見てみると `pnpm` がインストールされています。そして、少なくとも、**2023/03/29 14 時時点**ではバージョンが固定されていませんでした。
 
 ```docker
 # Install pnpm
