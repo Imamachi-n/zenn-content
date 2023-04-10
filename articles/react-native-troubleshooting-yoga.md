@@ -39,7 +39,7 @@ react-native 内部で使われている Yoga というパッケージのバー�
 
 ## 解決策（パッチを当てる方法）
 
-シンプルに react-native のバージョンを上げるという方法もありますが、プロダクトの状況によってはパッチを当てて、すぐにりりーすしたいケースもあるでしょう。
+シンプルに react-native のバージョンを上げるという方法もありますが、プロダクトの状況によってはパッチを当てて、すぐにリリースしたいケースもあるでしょう。
 
 ここでは、`patch-package` という npm パッケージを使って、パッチを作成する方法を紹介します。
 [ds300/patch-package: Fix broken node modules instantly 🏃🏽‍♀️💨](https://github.com/ds300/patch-package#set-up)
