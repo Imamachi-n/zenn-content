@@ -98,20 +98,10 @@ node_modules/aws-cdk-lib/aws-lambda-nodejs/lib/Dockerfile
 
 上記の Dockerfile を開き、`pnpm` を `pnpm@7.30.5` に変更します。
 
-```
+```diff
  # Install pnpm
 - RUN npm install --global pnpm
 + RUN npm install --global pnpm@7.30.5
-```
-
-node_modules のファイルを変更したら、`package.json` に以下のコマンドを追加した上で、
-
-```json
-"scripts": {
-  ...
-  "postinstall": "patch-package",
-  ...
-},
 ```
 
 以下のコマンドを実行します。
@@ -124,7 +114,19 @@ yarn patch-package aws-cdk-lib
 
 ![](/images/aws-lambda-nodejs-pnpm-error/patch_img.png)
 
-最後に、デプロイを実行して、ログで以下のように pnpm がバージョン固定されてインストールされたら成功です！
+最後に、node_modules のファイルを変更したら、`package.json` に以下のコマンドを追加します（`yarn install` 後にパッチを当てる処理を記述します）
+
+```json
+"scripts": {
+  ...
+  "postinstall": "patch-package",
+  ...
+},
+```
+
+### 最終確認
+
+デプロイを実行して、ログで以下のように pnpm がバージョン固定されてインストールされたら成功です！
 
 ```
 Step 4/13 : RUN npm install --global pnpm@7.30.5
