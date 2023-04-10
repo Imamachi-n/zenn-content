@@ -104,7 +104,17 @@ node_modules/aws-cdk-lib/aws-lambda-nodejs/lib/Dockerfile
 + RUN npm install --global pnpm@7.30.5
 ```
 
-node_modules のファイルを変更したら、以下のコマンドを実行します。
+node_modules のファイルを変更したら、`package.json` に以下のコマンドを追加した上で、
+
+```json
+"scripts": {
+  ...
+  "postinstall": "patch-package",
+  ...
+},
+```
+
+以下のコマンドを実行します。
 
 ```bash
 yarn patch-package aws-cdk-lib
