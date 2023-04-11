@@ -36,6 +36,7 @@ react-native 内部で使われている Yoga というパッケージのバー�
 
 - react-native < 0.69
   [Use logical operator instead of bit operation · facebook/react-native@52d8a79](https://github.com/facebook/react-native/commit/52d8a797e7a6be3fa472f323ceca4814a28ef596)
+- Xcode >= 14.3
 
 ## 解決策（パッチを当てる方法）
 
