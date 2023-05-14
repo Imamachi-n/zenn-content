@@ -2,7 +2,7 @@
 title: "Amazon Cognito アドバンスドセキュリティで不正ログインと思しきアクセスを検知する & トラブルシューティング"
 emoji: "🛡"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["AmazonCognito", "AWSCDK"]
+topics: ["Cognito", "AWSCDK"]
 published: true
 publication_name: "cureapp"
 ---
