@@ -1,6 +1,6 @@
 ---
 title: "CureApp インフラわいがや会 2023/05/19 議事録"
-emoji: "😸"
+emoji: "🏗"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["VerifiedAccess", "UserNotifications", "GuardDuty", "SecurityHub"]
 published: true
