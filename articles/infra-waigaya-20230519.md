@@ -13,9 +13,9 @@ publication_name: "cureapp"
 
 ## AWS Verified Access で VPN なしで Web アプリケーションに安全にアクセス
 
-最近、[AWS Verified Access](https://aws.amazon.com/jp/verified-access/) というサービスが GA となり、これを使うと VPN なしで Web アプリケーションに安全にアクセスできるインフラを作れそうです。
+最近、[AWS Verified Access](https://aws.amazon.com/jp/verified-access/) というサービスが GA となり、これを使うと VPN なしで Web アプリケーションに安全にアクセスできるというものです。
 
-特に、VPN 以外の方法で、社内向け Web アプリに安全にアクセスさせる手段として良さそうです。VPN の管理が必要なくなり、社内で使われている Azure AD などの認証基盤を経由してユーザがアクセスできるので、ユーザ体験としても良さそうです。
+特に、VPN 以外の方法で、社内向け Web アプリに安全にアクセスさせる手段として使えそうです。VPN の管理が必要なくなり、社内で使われている Azure AD などの認証基盤を経由してユーザがアクセスできるので、ユーザ体験としても良いと思いました。
 
 すでに、いくつか試してみた記事があったので紹介します。
 
