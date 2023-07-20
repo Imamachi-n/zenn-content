@@ -63,7 +63,7 @@ SELECT * FROM dummy_data
 
 ### 解決策
 
-まず、`GENERATE_DATE_ARRAY` 関数を使って　 2019/04/01 から月次の日付を生成します（`INTERVAL` の設定次第で、週次・日次でも可能です）
+まず、`GENERATE_DATE_ARRAY` 関数を使って 2019/04/01 から月次の日付を生成します（`INTERVAL` の設定次第で、週次・日次でも可能です）
 
 ```sql
 WITH
