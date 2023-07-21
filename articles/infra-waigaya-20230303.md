@@ -1,5 +1,5 @@
 ---
-title: "CureApp インフラわいがや会 2023/03/03 議事録"
+title: "CureApp インフラわいがや会 2023/03/03 議事録（プロダクトのバージョン番号の管理・App Runner・NestJS、他）"
 emoji: "😎"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["AWS", "WAF", "AppRunner", "NestJS", "JWT"]

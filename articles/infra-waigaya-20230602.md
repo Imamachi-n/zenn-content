@@ -1,5 +1,5 @@
 ---
-title: "CureApp インフラわいがや会 2023/06/02 議事録"
+title: "CureApp インフラわいがや会 2023/06/02 議事録（AWS CDK の設定切り戻しでハマった話・AWS コスト異常検出、他）"
 emoji: "🏗"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["AWSCDK"]

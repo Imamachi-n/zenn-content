@@ -1,5 +1,5 @@
 ---
-title: "CureApp インフラわいがや会 2023/03/10 議事録"
+title: "CureApp インフラわいがや会 2023/03/10 議事録（CDK・Node.js・mongoDB EOL、Cognito のログ）"
 emoji: "😎"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["EOL", "Cognito"]

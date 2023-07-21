@@ -1,5 +1,5 @@
 ---
-title: "CureApp インフラわいがや会 2023/05/19 議事録"
+title: "CureApp インフラわいがや会 2023/05/19 議事録（Verified Access・User Notifications、他）"
 emoji: "🏗"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["VerifiedAccess", "UserNotifications", "GuardDuty", "SecurityHub"]
