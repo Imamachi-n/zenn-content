@@ -1,5 +1,5 @@
 ---
-title: "BigQuery: 歯抜けの日付データを保管する方法（GENERATE_DATE_ARRAY）"
+title: "BigQuery: 歯抜けの日付データを補完する方法（GENERATE_DATE_ARRAY）"
 emoji: "🧮"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["bigquery", "sql"]
