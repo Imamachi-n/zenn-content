@@ -7,6 +7,10 @@ published: true
 publication_name: "cureapp"
 ---
 
+:::message
+こちらは [CureApp Advent Calendar 2023](https://qiita.com/advent-calendar/2023/cureapp) 9 日目の記事です。
+:::
+
 # はじめに - 今までのツラミ（Snyk のない世界）
 
 突然ですが皆さん、アプリケーションコードに関するセキュリティ脆弱性の対応・管理をちゃんとやってますか？
