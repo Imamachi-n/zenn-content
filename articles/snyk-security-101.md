@@ -175,6 +175,9 @@ _👆 ちょい前の larna（スコアが低い例）_
 ![](/images/snyk-security-101/snyk-101-10.png =500x)
 _👆 AWS CDK（スコアが高い例）_
 
+👇 Snyk Advisor のサイト
+[snyk Advisor](https://snyk.io/advisor/)
+
 # 最後に
 
 「セキュリティ脆弱性？？ なんかめんどいなぁ…。どこから手を付けていいかわかんないんだよなぁ…」
