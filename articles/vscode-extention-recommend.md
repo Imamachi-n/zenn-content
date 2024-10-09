@@ -4,7 +4,7 @@ emoji: "🛠️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["vscode"]
 published: true
-published_at: 2024-10-09 09:00
+published_at: 2024-10-10 09:00
 publication_name: "aldagram_tech"
 ---
 
