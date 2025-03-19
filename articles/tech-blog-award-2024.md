@@ -3,7 +3,8 @@ title: "アルダグラム テックブログアワード2024 〜去年投稿し
 emoji: "🏅"
 type: "idea" # tech: 技術記事 / idea: アイデア
 topics: ["techblog"]
-published: false
+published: true
+published_at: 2025-03-21 09:00
 publication_name: "aldagram_tech"
 ---
 
