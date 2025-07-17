@@ -6,6 +6,8 @@ topics: ["bioconda", "mamba", "anaconda", "NGS", "PARCLIP"]
 published: true
 ---
 
+## はじめに
+
 次世代シーケンサー（NGS: Next-Generation Sequencing）の解析を始めたくて、Bioconda をセットアップしてみることにしました。また、FASTQ ファイルの QC に関しても試してみたので、合わせて忘備録的にやり方をまとめておこうと思います。
 
 Bioconda のインストールで挫折した人もいるんじゃないでしょうか？
