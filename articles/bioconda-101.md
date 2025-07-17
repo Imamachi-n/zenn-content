@@ -14,7 +14,7 @@ published: true
 Anaconda も種類が複数あり、どれをインストールしたらいいのか分かりません。
 公式ドキュメントなどを確認してみたのですが、結構混乱します（私は混乱しました）
 
-色々調べた結果、個人的な見解として、Miniconda をインストールした環境に、Mamda をインストールするをオススメします。
+色々調べた結果、個人的な見解として、Miniconda をインストールした環境に、Mamba をインストールすることをオススメします。
 詳細は以下に書きますが、**とにかく Bioconda をインストールできればいい人は読み飛ばしてください。**
 
 ## ⚠️ Miniconda / Anaconda / Mamba / Micromamba どれをインストールすればいいのか問題
@@ -25,24 +25,24 @@ Bioconda の使い方を確認すると、`conda` をインストールするよ
 一方で、Bioconda に登録されているバイオインフォマティクスツールのページを開くと、mamba コマンドでのインストール方法が紹介されています。これを見ると、Bioconda は mamba を推奨しているようにも見えます。
 @[card](https://bioconda.github.io/recipes/sra-tools/README.html#package-sra-tools)
 
-conda のインストールページでは、Miniconda と Anaconda の両方が紹介されていて、マジで意味がわかりません。
+Anaconda のインストールページでは、Miniconda と Anaconda の両方が紹介されていて、マジで意味がわかりません。
 @[card](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
 
 それぞれのツールの概要をまとめると、以下になります。
 
-| ツール     | 説明                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------- |
-| Anaconda   | Python + Jupyter + NumPy, pandas, matplotlib, scikit-learn,など全部入り。GUI（Anaconda Navigator）も付属。 |
-| Miniconda  | Conda 本体と Python だけが入った最小構成の Anaconda。                                                      |
-| Mamba      | Conda の代替。C++で実装されていて数十倍高速。Anaconda / Miniconda に追加インストールして使う。             |
-| Micromamba | mamba の超軽量版。conda 自体も不要。完全にスタンドアロンで conda 環境を作れる。                            |
+| ツール     | 説明                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Anaconda   | Python + Jupyter + NumPy, pandas, matplotlib, scikit-learn など全部入り。GUI（Anaconda Navigator）も付属。                 |
+| Miniconda  | Conda 本体と Python だけが入った最小構成の Anaconda。                                                                      |
+| Mamba      | Conda の代替。C++で実装されていて数十倍高速（特に依存解決の速さが顕著）。Anaconda / Miniconda に追加インストールして使う。 |
+| Micromamba | Mamba の超軽量版。conda 自体も不要。完全にスタンドアロンで conda 環境を作れる。                                            |
 
 まず、**Anaconda** ですが、不要かもしれない・最初は使わないツール類がまとめてインストールされてしまいます。なので、今回の選択肢から外れます。
 次に、**Micromamba** ですが、Anaconda（Anaconda / Miniconda）に依存せずに動作します。万が一、トラブルになったときのことを考えると、Anaconda のほうが利用者が多いですし信頼性も高いです。なので、こちらも選択肢から外れます。
 
-結論、Miniconda で最小構成の Anaconda をインストールし、Anaconda 経由で Mamba をインストール。ライブラリ・ツールのインストール時のみ、Mamba を活用するという運用にするのが一番良いのではないかと思いました。この構成であれば、Mamba でトラブったときに Anaconda で直接ライブラリ・ツールをインストールすることも可能です。
+結論、Miniconda で最小構成の Anaconda をインストールし、Anaconda 経由で Mamba をインストール。ライブラリ・ツールのインストール時のみ Mamba を活用する、という運用にするのが一番良いのではないかと思いました。この構成であれば、Mamba でトラブったときに Anaconda で直接ライブラリ・ツールをインストールすることも可能です。
 
-## Miniconda + Mamda 構成に Bioconda をインストールする
+## Miniconda + Mamba 構成に Bioconda をインストールする
 
 ### Miniconda のインストール
 
