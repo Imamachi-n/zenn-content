@@ -206,6 +206,18 @@ $ docker run --rm -v $(pwd):/data -w /data \
            multiqc | MultiQC complete
 ```
 
+できあがった MultiQC のファイルを開きます。
+
+```bash
+open multiqc_report.html
+```
+
+MultiQC は、多種多様なバイオインフォマティクスツールが出力するレポートに対応しており、それを 1 つのレポートにまとめてくれます。一覧性に優れているのでありがたいですね（私が研究してた頃にほしかった）
+
+![1](/images/bioconda-101/1.png)
+
+![2](/images/bioconda-101/2.png)
+
 ### 7. alias を作成して、省略コマンドでツールを呼び出す
 
 ここまでで、コンテナ上でツールを実行してきて、コマンドを打つのが面倒になってきませんか？
