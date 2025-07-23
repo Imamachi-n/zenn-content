@@ -279,7 +279,7 @@ source ~/.zshrc
 fastqc-d SRR488740_PAR-CLIP_CSTF-64_adapter_trimmed.fastq
 ```
 
-### Apptainer (Singularity) を利用した場合
+### 📝 Apptainer (Singularity) を利用した場合
 
 コマンドとイメージファイルが変わるだけで、ほとんど一緒です（コマンドなどは割愛します）
 例えば、遺伝研のスパコンの場合、Docker は使えないので、Apptainer を使う必要があります。
