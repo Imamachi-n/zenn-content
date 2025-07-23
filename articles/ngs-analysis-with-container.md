@@ -1,5 +1,5 @@
 ---
-title: "コンテナ（Docker・Singularity/Apptainer）上で NGS 解析のツールを動作させてみた"
+title: "コンテナ上で NGS 解析のツールを動作させてみた（Docker・Singularity/Apptainer）"
 emoji: "🧬"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["NGS", "PARCLIP", "docker", "singularity", "apptainer"]
