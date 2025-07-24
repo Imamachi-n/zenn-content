@@ -4,6 +4,7 @@ emoji: "🧬"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["NGS", "PARCLIP", "docker", "singularity", "apptainer"]
 published: true
+publication_name: "rna_analysis"
 ---
 
 ## はじめに

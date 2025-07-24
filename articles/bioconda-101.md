@@ -4,6 +4,7 @@ emoji: "🧬"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["bioconda", "mamba", "anaconda", "NGS", "PARCLIP"]
 published: true
+publication_name: "rna_analysis"
 ---
 
 ## はじめに
