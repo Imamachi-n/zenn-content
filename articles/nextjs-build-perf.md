@@ -2,7 +2,7 @@
 title: "Next.jsのビルド速度を改善したい〜Next.jsのTrace情報を分析してボトルネックとなっている処理を特定してみる"
 emoji: "🚄"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["nextjs", "docker", "githubaction"]
+topics: ["nextjs", "docker", "githubactions"]
 published: true
 published_at: 2025-08-07 09:00
 publication_name: "aldagram_tech"
