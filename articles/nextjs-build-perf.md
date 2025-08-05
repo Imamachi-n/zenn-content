@@ -178,7 +178,7 @@ ANALYZE=true npm run build
 
 ![image.png](/images/nextjs-build-perf/2.png =700x)
 
-## （おまけ）GitHub Actions & Docker コンテナ上で Next.js のビルドを行っている場合
+## （補足）GitHub Actions & Docker コンテナ上で Next.js のビルドを行っている場合
 
 ### docker buildx の利用
 
