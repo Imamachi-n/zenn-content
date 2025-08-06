@@ -12,17 +12,17 @@ publication_name: "aldagram_tech"
 
 ある日、Next.js で作られた Web アプリケーションをデプロイしていたときの話。
 「なんか、Next.js のビルド速度、遅くない…？」
-ということに気づきました（全体のデプロイ時間のうち、7 割くらいがビルド時間になっていました）
+ということに気づきました（全体のデプロイ時間のうち、7 割がビルド時間になっていました）
 
 そんなわけで、Next.js のビルド速度を改善することにしました。
 
 ## Next.js のビルド時間が遅い原因（ボトルネック）の調査
 
-まずは、Next.js のビルド時間のうち、どこの処理がボトルネックになっているのか、特定する必要があります。Next.js は、`.next/trace` にトレース情報を自動で出力してくれます。このトレース情報を分析することで、ビルド時の処理毎の処理時間を割り出すことができます。
+まずは、Next.js のビルド時間のうち、どこの処理がボトルネックになっているのか特定する必要があります。Next.js は `.next/trace` にトレース情報を自動で出力してくれます。このトレース情報を分析することで、ビルド時の処理毎の処理時間を割り出すことができます。
 
 ### Next.js のビルドにおけるトレース情報の用意
 
-ローカル環境で Next.js のビルドしてみて、Next.js のビルド処理における trace の情報を取得してみましょう（ `.next/trace` に trace 情報が出力される）
+ローカル環境で Next.js のビルドを実行してみて、ビルド処理における Next.js のトレース情報を取得してみましょう（`.next/trace` に trace 情報が出力されます）
 
 ```bash
 npm run build
@@ -35,7 +35,7 @@ npm run build
 [{"name":"generate-buildid","duration":96,"timestamp":356037304708,"id":4,"parentId":1,"tags":{},"startTime":1748005352098,"traceId":"6783aff358590a83"},{"name":"load-custom-routes","duration":127,"timestamp":356037304839,"id":5,"parentId":1,"tags":{},"startTime":1748005352098,"traceId":"6783aff358590a83"},...]
 ```
 
-Next.js のリポジトリに、このトレース情報を tree 構造のデータ（人間が見れるデータ）に変換するスクリプトがあるので、それを活用します。
+Next.js の GitHub リポジトリに、このトレース情報を tree 構造のデータ（人間が見れるデータ）に変換するスクリプトがあるので、それを活用します。
 [https://github.com/vercel/next.js/blob/canary/scripts/trace-to-tree.mjs](https://github.com/vercel/next.js/blob/canary/scripts/trace-to-tree.mjs)
 
 必要なパッケージを手元にインストールします。
@@ -74,22 +74,24 @@ node trace-to-tree.mjs .next/trace
 
 ### AI にトレース情報を解釈させる（オプション）
 
-tree データの状態でも十分、人間が読めるカタチになっていますが、どこが処理上のボトルネックになっているのか AI に整理してもらいます。すると、
+tree データの状態でも十分、人間が読めるカタチになっていますが、どこが処理上のボトルネックになっているのか AI に整理してもらうと楽です。
+実際に AI にデータを読み込ませると、
 
 1. 型チェック
 2. Lint チェック
 3. バンドル処理（Webpack コンパイル）
 
-の３つが処理上のボトルネックであることがわかりました。
+の３つが処理上のボトルネックであることがわかりました（今回扱った Next.js アプリケーションでの話です）
 ※ Next.js のビルド（`npm run build`）では、型チェックと Lint チェックが自動で実行されるようになっている。
 
 ## Next.js のビルドパフォーマンスの改善
 
 それでは、ここからはトレース情報の分析に基づいて、Next.js のビルドパフォーマンスを改善してみましょう。
+以下はあくまで具体例なので、Next.js アプリケーションによって判断してください。
 
 ### 1. 型チェック
 
-CI で型チェックは実施済みのため、検証環境へのデプロイ時に限り、型チェックを Skip するようにしてみることにしました（一方で、本番環境へのデプロイでは、型チェックをスキップしないようにしました）
+CI で型チェックは実施済みのため、検証環境へのデプロイ時に限り、型チェックを Skip するようにしました（一方で、本番環境へのデプロイでは、型チェックをスキップしないようにしました）
 `next.config.ts` の設定ファイルに `typescript.ignoreBuildErrors: true` の設定を追加することで、型チェックをスキップできます。
 [https://nextjs-ja-translation-docs.vercel.app/docs/api-reference/next.config.js/ignoring-typescript-errors](https://nextjs-ja-translation-docs.vercel.app/docs/api-reference/next.config.js/ignoring-typescript-errors)
 
@@ -107,7 +109,7 @@ module.exports = {
 
 ### 2. Lint チェック
 
-CI で Lint チェックは実施済みのため、Lint チェックを Skip するようにしてみることにしました。
+CI で Lint チェックは実施済みのため、Lint チェックを Skip するようにしました。
 `next.config.ts` の設定ファイルに `eslint.ignoreDuringBuilds: true` の設定を追加することで、Lint チェックをスキップできます。
 [https://nextjs.org/docs/app/api-reference/config/next-config-js/eslint](https://nextjs.org/docs/app/api-reference/config/next-config-js/eslint)
 
@@ -124,7 +126,7 @@ module.exports = {
 
 結論、Vercel が開発中の Turbopack が `next build` に完全対応するまで待つことにしました（背景は以下）
 
-Next.js のコードのバンドルに Webpack を使っていたので、Turbopack や Rspack のような Rust 製のバンドラーに変更することで速度改善が見込める可能性があります。
+今回対象である Next.js のコードのバンドルには Webpack を使っていました。なので、Turbopack や Rspack のような Rust 製のバンドラーに変更することで速度改善が見込める可能性があります。
 
 @[card](https://buildersbox.corp-sansan.com/entry/2025/04/14/110000)
 
@@ -138,7 +140,7 @@ Rspack は Webpack の互換性を意識した後継バンドラーなんです�
 
 個人的な主観としては、Next.js の開発元である Vercel が開発中の Turbopack を選択したほうが良さそうだと思っています。思っていますが、Turbopack は Webpack との互換性がないのが懸念点としてあります（マイグレーションで苦労しそう…）
 
-### 3-b. バンドル処理（各種ライブラリの見直し）
+### 3-b. バンドル処理（各種パッケージの見直し）
 
 Next.js の Bundle Analyzer プラグインを導入することで、バンドルの解析ができます。
 @[card](https://nextjs.org/docs/app/guides/package-bundling)
@@ -166,11 +168,11 @@ module.exports = withBundleAnalyzer(bundleAnalyzerConfig)(nextConfig)
 ANALYZE=true npm run build
 ```
 
-バンドルサイズを確認できたら、サイズの大きいものから順に最適化を検討します。また、トレース情報との対比しながら、バンドルに時間がかかっている箇所を特定してもよいです。詳細は割愛します。
+バンドルサイズを確認できたら、サイズの大きいものから順に最適化を検討します。また、トレース情報と対比しながら、バンドルに時間がかかっている箇所を特定するのもよいです。こちらも、扱っているパッケージに依存するため、詳細は割愛します。
 
 ## ビルドパフォーマンス結果
 
-上記の改善を行った結果、**4.5 分**ビルド時間を短縮することができました 🎉
+上記のもろもろの改善を行った結果、ビルド時間を以前よりも **4.5 分**短縮できました 🎉
 
 | Before              | After              |
 | ------------------- | ------------------ |
@@ -180,12 +182,12 @@ ANALYZE=true npm run build
 
 ## （補足）GitHub Actions & Docker コンテナ上で Next.js のビルドを行っている場合
 
-### docker buildx の利用
+### Docker Buildx の利用
 
 Docker コンテナ上で Next.js のビルドを実行している場合、キャッシュが効いていないと処理が遅くなる要因となります。
 そこで、`docker buildx` を使い、キャッシュの保存先を指定することで、繰り返し Next.js のビルドをしたときにキャッシュを効かせて、ビルド時間を短縮することができます。
 
-GitHub Actions を利用している場合、buildx をセットアップするカスタム action が提供されているので、これを利用します。
+GitHub Actions を利用している場合、Buildx をセットアップするカスタム action が提供されているので、これを利用します。
 @[card](https://github.com/docker/setup-buildx-action)
 
 また、Docker コマンドの具体例は、以下のとおりです。
@@ -201,14 +203,14 @@ docker buildx build \
   .
 ```
 
-- [--cache-from](https://docs.docker.com/reference/cli/docker/buildx/build/#cache-from) オプションでイメージレジストリ先から現在のビルドにキャッシュをインポートするように指定します。
-- [--cache-to](https://docs.docker.com/reference/cli/docker/buildx/build/#cache-to) オプションでキャッシュ保存先であるイメージレジストリ先を指定します。
+- [--cache-from](https://docs.docker.com/reference/cli/docker/buildx/build/#cache-from) オプションでイメージレジストリから現在のビルドにキャッシュをインポートするように指定します。
+- [--cache-to](https://docs.docker.com/reference/cli/docker/buildx/build/#cache-to) オプションでキャッシュ保存先であるイメージレジストリを指定します。
 
 使っているサービス（ECR 等）で指定内容が変わってくるので、詳細は割愛します。
 
 ## 最後に
 
-型チェック・Lint チェックのスキップは、本質的な問題解決というわけではないですが、Rust 製の Linter を使っていないと、Lint チェックの処理時間も無視できないレベルで時間がかかることがあり、このあたりの処理のスキップは割と効果的です。
-また、Docker コンテナ上でビルドしている場合は、docker buildx でのキャッシュ指定はビルド時間短縮に結構効果的です。
+型チェック・Lint チェックのスキップは、本質的な問題解決というわけではないですが、Rust 製の Linter を使っていないと、Lint チェックの処理時間も無視できないレベルで時間がかかることがあります。このあたりの処理のスキップは、割とビルド時間の短縮に効果的です。
+また、Docker コンテナ上でビルドしている場合は、Docker Buildx でのキャッシュ指定はビルド時間短縮に効果的なので、設定しておきたいところです。
 
 地味な小技が多いのですが、この記事が Next.js のビルド時間が長くて困っている人の助けになったら幸いです。
