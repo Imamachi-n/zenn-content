@@ -3,7 +3,7 @@ title: "Apollo Clientのキャッシュ競合で無限ループ！？その原�
 emoji: "⚡"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["graphql", "apolloclient", "react"]
-published: false
+published: true
 publication_name: "aldagram_tech"
 ---
 
@@ -203,6 +203,8 @@ query GetUsersByB($uuid: ID!) {
 
 Relay-Style Pagination はリスト操作によく使われますが、単一オブジェクトの取得でも「引数が違うのに同じキャッシュとして扱いたい」あるいはその逆のケースで `keyArgs` が役立ちます。
 デフォルトでは全ての引数がキャッシュキーになりますが、これをカスタマイズすることで意図しない上書きを防ぐことができます。
+
+https://www.apollographql.com/docs/react/caching/cache-configuration#customizing-cache-ids
 
 ```tsx
 new ApolloClient({
